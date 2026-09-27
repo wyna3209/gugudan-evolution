@@ -1,0 +1,3635 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>포켓몬 구구단 진화</title>
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --panel: #ffffff;
+      --ink: #172033;
+      --muted: #667085;
+      --line: #d9e2ef;
+      --accent: #2f80ed;
+      --accent-2: #f2c94c;
+      --good: #219653;
+      --bad: #eb5757;
+      --shadow: 0 16px 40px rgba(23, 32, 51, 0.12);
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    [hidden] {
+      display: none !important;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 18% 10%, rgba(47, 128, 237, 0.13), transparent 27%),
+        linear-gradient(145deg, #f8fbff 0%, #eef4fb 48%, #fff8de 100%);
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    button {
+      border: 0;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.55;
+    }
+
+    .app {
+      width: min(1160px, calc(100% - 28px));
+      margin: 0 auto;
+      padding: 22px 0 30px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 12px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .ball {
+      width: 38px;
+      height: 38px;
+      flex: 0 0 auto;
+      border: 3px solid #202533;
+      border-radius: 50%;
+      background: linear-gradient(#e84142 0 45%, #202533 45% 55%, #fff 55%);
+      position: relative;
+      box-shadow: 0 6px 16px rgba(23, 32, 51, 0.16);
+    }
+
+    .ball::after {
+      content: "";
+      position: absolute;
+      inset: 10px;
+      border: 3px solid #202533;
+      border-radius: 50%;
+      background: #fff;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(1.45rem, 3vw, 2.25rem);
+      line-height: 1.05;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .sound-toggle {
+      width: 42px;
+      height: 42px;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      background: #172033;
+      color: #fff;
+      box-shadow: var(--shadow);
+    }
+
+    .sound-toggle svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    .top-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .reset-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      background: #fff;
+      color: var(--ink);
+      border: 1px solid var(--line);
+    }
+
+    .reset-icon svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    .screen {
+      display: none;
+    }
+
+    .screen.active {
+      display: block;
+    }
+
+    .game-shell {
+      width: min(900px, 100%);
+      margin: 0 auto;
+    }
+
+    .panel {
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid rgba(217, 226, 239, 0.95);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    .hero {
+      min-height: 520px;
+      overflow: hidden;
+      display: grid;
+      grid-template-columns: minmax(0, 1.05fr) minmax(300px, 0.95fr);
+    }
+
+    .intro {
+      padding: clamp(22px, 4vw, 46px);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 20px;
+    }
+
+    .intro h2 {
+      margin: 0;
+      font-size: clamp(2.05rem, 5vw, 4rem);
+      line-height: 1;
+      letter-spacing: 0;
+    }
+
+    .intro p {
+      max-width: 56ch;
+      margin: 0;
+      color: #485467;
+      line-height: 1.65;
+    }
+
+    .starter-area {
+      padding: 20px;
+      background: linear-gradient(180deg, rgba(47, 128, 237, 0.1), rgba(242, 201, 76, 0.16));
+      display: grid;
+      align-content: center;
+      gap: 12px;
+    }
+
+    .starter-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .starter-grid.single {
+      grid-template-columns: 1fr;
+    }
+
+    .starter-card {
+      min-height: 188px;
+      padding: 14px;
+      display: grid;
+      grid-template-rows: 88px auto auto;
+      gap: 8px;
+      border: 2px solid transparent;
+      border-radius: 8px;
+      background: #fff;
+      color: var(--ink);
+      text-align: left;
+      box-shadow: 0 10px 24px rgba(23, 32, 51, 0.1);
+      transition: transform 0.16s ease, border-color 0.16s ease;
+    }
+
+    .starter-card:hover,
+    .starter-card:focus-visible {
+      transform: translateY(-2px);
+      border-color: var(--accent);
+      outline: none;
+    }
+
+    .starter-card img {
+      width: 88px;
+      height: 88px;
+      object-fit: contain;
+      image-rendering: pixelated;
+      place-self: center;
+      filter: drop-shadow(0 8px 9px rgba(23, 32, 51, 0.18));
+    }
+
+    .starter-card strong {
+      font-size: 1.05rem;
+    }
+
+    .starter-card span {
+      color: var(--muted);
+      font-size: 0.87rem;
+      line-height: 1.35;
+    }
+
+    .course-panel {
+      padding: clamp(18px, 3vw, 28px);
+    }
+
+    .course-header {
+      display: grid;
+      grid-template-columns: 74px minmax(0, 1fr) auto;
+      gap: 16px;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+
+    .course-partner {
+      width: 74px;
+      height: 74px;
+      object-fit: contain;
+      image-rendering: pixelated;
+      filter: drop-shadow(0 7px 7px rgba(23, 32, 51, 0.18));
+    }
+
+    .course-heading h2 {
+      margin: 0;
+      font-size: clamp(1.4rem, 3vw, 2rem);
+      letter-spacing: 0;
+    }
+
+    .course-heading p {
+      margin: 5px 0 0;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .course-total {
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    .course-total small {
+      display: block;
+      color: var(--muted);
+    }
+
+    .course-total strong {
+      font-size: 1.15rem;
+    }
+
+    .partner-roster {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+      padding: 10px 0;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .partner-roster-label {
+      flex: 0 0 auto;
+      width: 66px;
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-weight: 900;
+      line-height: 1.25;
+    }
+
+    .partner-options {
+      min-width: 0;
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      scrollbar-width: thin;
+    }
+
+    .partner-option {
+      width: 72px;
+      min-width: 72px;
+      height: 68px;
+      padding: 4px 5px;
+      display: grid;
+      grid-template-rows: 42px auto;
+      justify-items: center;
+      align-items: center;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--ink);
+    }
+
+    .partner-option.selected {
+      border: 2px solid var(--accent);
+      background: #eef6ff;
+    }
+
+    .partner-option:disabled {
+      background: #f2f5f9;
+      opacity: 1;
+    }
+
+    .partner-option img {
+      width: 42px;
+      height: 42px;
+      object-fit: contain;
+      image-rendering: pixelated;
+    }
+
+    .partner-option:disabled img {
+      filter: grayscale(1);
+      opacity: 0.28;
+    }
+
+    .partner-option span {
+      max-width: 100%;
+      overflow: hidden;
+      color: var(--muted);
+      font-size: 0.7rem;
+      font-weight: 800;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .test-panel {
+      margin-bottom: 16px;
+      padding: 10px 12px;
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: 12px;
+      align-items: center;
+      border: 1px dashed #9aa8bc;
+      border-radius: 8px;
+      background: #f7f9fc;
+    }
+
+    .test-panel[hidden] {
+      display: none;
+    }
+
+    .test-panel strong {
+      font-size: 0.78rem;
+      white-space: nowrap;
+    }
+
+    .test-stage-buttons {
+      min-width: 0;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(42px, 1fr));
+      gap: 5px;
+    }
+
+    .test-stage-button {
+      min-width: 34px;
+      height: 34px;
+      padding: 0;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      color: var(--ink);
+      font-size: 0.76rem;
+      font-weight: 900;
+    }
+
+    .test-stage-button.completed {
+      border-color: #78bd90;
+      background: #eaf8ef;
+      color: #176b38;
+    }
+
+    .course-grid {
+      display: grid;
+      gap: 20px;
+    }
+
+    .day-course-group + .day-course-group {
+      padding-top: 18px;
+      border-top: 1px solid var(--line);
+    }
+
+    .day-course-head {
+      margin-bottom: 9px;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: baseline;
+    }
+
+    .day-course-head strong {
+      font-size: 1rem;
+    }
+
+    .day-course-head span {
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 800;
+    }
+
+    .day-course-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .teacher-report-button {
+      width: 32px;
+      height: 32px;
+      padding: 0;
+      display: grid;
+      place-items: center;
+      border: 1px solid #8cb4e7;
+      border-radius: 6px;
+      background: #eef6ff;
+      color: #1d63bd;
+    }
+
+    .teacher-report-button svg {
+      width: 17px;
+      height: 17px;
+    }
+
+    .day-stage-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .course-card {
+      min-height: 88px;
+      padding: 12px;
+      display: grid;
+      grid-template-columns: 42px minmax(0, 1fr) auto;
+      gap: 11px;
+      align-items: center;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--ink);
+      text-align: left;
+      box-shadow: 0 5px 14px rgba(23, 32, 51, 0.07);
+    }
+
+    .course-card:not(:disabled):hover,
+    .course-card:not(:disabled):focus-visible,
+    .course-card.recommended {
+      border-color: var(--accent);
+      outline: none;
+    }
+
+    .course-card:disabled {
+      background: #f2f5f9;
+      color: #8792a5;
+      opacity: 1;
+    }
+
+    .course-number {
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: #eaf3ff;
+      color: #1d63bd;
+      font-weight: 900;
+    }
+
+    .course-card.completed .course-number {
+      background: #ddf5e6;
+      color: #177442;
+    }
+
+    .course-copy {
+      min-width: 0;
+    }
+
+    .course-copy strong,
+    .course-copy span {
+      display: block;
+    }
+
+    .course-copy span {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 0.84rem;
+      line-height: 1.3;
+    }
+
+    .course-state {
+      color: var(--muted);
+      font-size: 0.8rem;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .statusbar {
+      display: grid;
+      grid-template-columns: minmax(120px, auto) minmax(180px, 1fr) auto;
+      gap: 16px;
+      align-items: center;
+      padding: 10px 14px;
+      margin-bottom: 10px;
+    }
+
+    .stage-brief {
+      min-width: 0;
+    }
+
+    .stage-brief small,
+    .progress-brief small {
+      display: block;
+      color: var(--muted);
+      font-size: 0.72rem;
+    }
+
+    .stage-brief strong,
+    .progress-brief strong {
+      display: block;
+      margin-top: 2px;
+      font-size: 1.02rem;
+      white-space: nowrap;
+    }
+
+    .progress-brief {
+      min-width: 62px;
+      text-align: right;
+    }
+
+    .xp-wrap {
+      min-width: 0;
+    }
+
+    .xp-label {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      color: var(--muted);
+      font-size: 0.86rem;
+      margin-bottom: 7px;
+    }
+
+    .meter {
+      height: 10px;
+      overflow: hidden;
+      border: 1px solid #c7d6e8;
+      border-radius: 999px;
+      background: #edf3fa;
+    }
+
+    .meter > span {
+      display: block;
+      height: 100%;
+      width: 0;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #27ae60, #f2c94c);
+      transition: width 0.3s ease;
+    }
+
+    .arena {
+      min-height: 0;
+      padding: clamp(16px, 3vw, 26px);
+      display: grid;
+      grid-template-rows: auto auto;
+      gap: 14px;
+    }
+
+    .stage-head {
+      display: none;
+    }
+
+    .stage-title h2 {
+      margin: 0;
+      font-size: clamp(1.45rem, 3vw, 2rem);
+      letter-spacing: 0;
+    }
+
+    .stage-title p {
+      margin: 6px 0 0;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .pill {
+      min-width: 88px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: #172033;
+      color: #fff;
+      text-align: center;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .battlefield {
+      min-height: 280px;
+      display: grid;
+      grid-template-columns: minmax(160px, 1fr) minmax(200px, 1fr);
+      gap: 20px;
+      align-items: center;
+      padding: 18px;
+      border-radius: 8px;
+      background:
+        linear-gradient(180deg, rgba(139, 202, 111, 0.62), rgba(101, 171, 94, 0.55) 48%, rgba(84, 139, 86, 0.25) 49%),
+        linear-gradient(120deg, #dff3ff, #fff9da);
+      border: 1px solid #c9dfc6;
+      overflow: hidden;
+      position: relative;
+    }
+
+    #gameScreen[data-mode="training"] .battlefield {
+      display: grid;
+      grid-template-columns: 1fr;
+      min-height: 230px;
+      background:
+        linear-gradient(180deg, rgba(216, 241, 255, 0.9), rgba(238, 250, 240, 0.95) 58%, rgba(178, 220, 166, 0.62) 59%);
+      border-color: #c9dfd2;
+    }
+
+    #gameScreen[data-mode="training"] .question-card {
+      min-height: 0;
+    }
+
+    #gameScreen[data-mode="training"] .mon.enemy,
+    #gameScreen[data-mode="training"] .mon.player .hp {
+      display: none;
+    }
+
+    #gameScreen[data-mode="training"] .mon.player {
+      align-self: center;
+      z-index: 3;
+    }
+
+    #gameScreen[data-mode="training"] .battlefield::before {
+      left: 30%;
+      right: 30%;
+      bottom: 15%;
+    }
+
+    .captured-companions {
+      position: absolute;
+      inset: 0;
+      display: none;
+      overflow: hidden;
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    #gameScreen[data-mode="training"] .captured-companions {
+      display: block;
+    }
+
+    .captured-friend {
+      position: absolute;
+      left: var(--friend-left);
+      bottom: var(--friend-bottom);
+      width: clamp(34px, 6vw, 52px);
+      height: clamp(34px, 6vw, 52px);
+      object-fit: contain;
+      image-rendering: pixelated;
+      filter: drop-shadow(0 5px 4px rgba(23, 32, 51, 0.22));
+      animation: companion-wander var(--friend-speed) var(--friend-delay) ease-in-out infinite alternate;
+    }
+
+    @keyframes companion-wander {
+      0% {
+        transform: translate(-12px, 0) scaleX(1);
+      }
+      45% {
+        transform: translate(5px, -5px) scaleX(1);
+      }
+      55% {
+        transform: translate(8px, -5px) scaleX(-1);
+      }
+      100% {
+        transform: translate(22px, 0) scaleX(-1);
+      }
+    }
+
+    .battlefield::before {
+      content: "";
+      position: absolute;
+      left: 4%;
+      right: 4%;
+      bottom: 16%;
+      height: 38px;
+      border-radius: 50%;
+      background: rgba(39, 65, 46, 0.13);
+    }
+
+    .mon {
+      position: relative;
+      display: grid;
+      justify-items: center;
+      gap: 10px;
+      z-index: 1;
+    }
+
+    .mon.enemy {
+      align-self: start;
+      transform: translateY(12px);
+    }
+
+    .sprite {
+      width: min(170px, 34vw);
+      height: min(170px, 34vw);
+      object-fit: contain;
+      image-rendering: pixelated;
+      filter: drop-shadow(0 16px 12px rgba(23, 32, 51, 0.22));
+      transition: transform 0.18s ease;
+    }
+
+    #gameScreen[data-mode="boss"] .mon.player .sprite {
+      transform: scaleX(-1);
+    }
+
+    .sprite.hit {
+      transform: translateX(-12px) rotate(-4deg);
+    }
+
+    #gameScreen[data-mode="boss"] .mon.player .sprite.hit {
+      transform: translateX(-12px) rotate(-4deg) scaleX(-1);
+    }
+
+    .sprite.attack {
+      transform: translateX(16px) scale(1.06);
+    }
+
+    .sprite.training-success {
+      animation: training-success 0.58s ease-out;
+    }
+
+    .sprite.training-fail {
+      animation: training-fail 0.5s ease-in-out;
+    }
+
+    @keyframes training-success {
+      0%, 100% {
+        transform: translateY(0) rotate(0) scale(1);
+        filter: drop-shadow(0 16px 12px rgba(23, 32, 51, 0.22));
+      }
+      34% {
+        transform: translateY(-24px) rotate(-7deg) scale(1.12);
+        filter: brightness(1.28) drop-shadow(0 0 18px rgba(242, 201, 76, 0.95));
+      }
+      64% {
+        transform: translateY(-8px) rotate(7deg) scale(1.07);
+        filter: brightness(1.15) drop-shadow(0 0 12px rgba(47, 128, 237, 0.55));
+      }
+    }
+
+    @keyframes training-fail {
+      0%, 100% {
+        transform: translateX(0) rotate(0) scale(1);
+        filter: drop-shadow(0 16px 12px rgba(23, 32, 51, 0.22));
+      }
+      22% {
+        transform: translateX(-12px) rotate(-6deg) scale(0.96);
+        filter: grayscale(0.75) brightness(0.82);
+      }
+      48% {
+        transform: translateX(10px) rotate(5deg) scale(0.94);
+        filter: grayscale(0.9) brightness(0.76);
+      }
+      72% {
+        transform: translateX(-6px) rotate(-3deg) scale(0.96);
+        filter: grayscale(0.65) brightness(0.84);
+      }
+    }
+
+    .mon-name {
+      min-width: 150px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.9);
+      text-align: center;
+      font-weight: 800;
+    }
+
+    .hp {
+      width: min(230px, 100%);
+      height: 13px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.86);
+      border: 1px solid #b6c5d8;
+      overflow: hidden;
+    }
+
+    .hp > span {
+      display: block;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, #27ae60, #6fcf97);
+      transition: width 0.25s ease, background 0.25s ease;
+    }
+
+    .question-zone {
+      min-width: 0;
+    }
+
+    .question-card {
+      padding: 14px 18px 16px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-areas:
+        "timer"
+        "work"
+        "keypad"
+        "message";
+      align-content: start;
+      gap: 12px;
+    }
+
+    .problem {
+      min-width: 0;
+      padding: 8px 0;
+      font-size: clamp(2.3rem, 7vw, 4.5rem);
+      line-height: 1;
+      font-weight: 900;
+      letter-spacing: 0;
+      text-align: center;
+      overflow-wrap: anywhere;
+    }
+
+    .problem.correction {
+      color: var(--bad);
+    }
+
+    .answer-row {
+      width: min(360px, 100%);
+      justify-self: center;
+      display: block;
+    }
+
+    .problem-stack {
+      grid-area: work;
+      width: 100%;
+      display: grid;
+      justify-items: center;
+      align-content: center;
+      gap: 12px;
+    }
+
+    .answer-row input {
+      width: 100%;
+      height: 48px;
+      border: 2px solid #b7c9df;
+      border-radius: 8px;
+      padding: 0 14px;
+      text-align: center;
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: var(--ink);
+      background: #f9fbfe;
+      caret-color: transparent;
+      cursor: default;
+    }
+
+    .answer-row #submitBtn {
+      display: none;
+    }
+
+    .answer-row input:focus {
+      outline: 3px solid rgba(47, 128, 237, 0.18);
+      border-color: var(--accent);
+    }
+
+    .primary {
+      height: 48px;
+      border-radius: 8px;
+      background: var(--accent);
+      color: #fff;
+      font-weight: 900;
+      box-shadow: 0 10px 22px rgba(47, 128, 237, 0.24);
+    }
+
+    .secondary {
+      height: 42px;
+      padding: 0 14px;
+      border-radius: 8px;
+      background: #edf3fa;
+      color: var(--ink);
+      border: 1px solid #cbd8e8;
+      font-weight: 800;
+    }
+
+    .timer-card {
+      grid-area: timer;
+      width: min(500px, 100%);
+      justify-self: center;
+      display: grid;
+      grid-template-columns: auto 1fr;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .timer-card small {
+      display: none;
+    }
+
+    .timer-value {
+      min-width: 58px;
+      font-size: 0.92rem;
+      line-height: 1;
+      font-weight: 800;
+      color: var(--muted);
+    }
+
+    .timer-bar {
+      height: 7px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: #e8eef6;
+    }
+
+    .timer-bar span {
+      display: block;
+      width: 100%;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #6fcf97, #f2c94c);
+      transition: width 0.12s linear;
+    }
+
+    .message {
+      grid-area: message;
+      min-height: 28px;
+      color: #3f4d63;
+      font-weight: 800;
+      text-align: center;
+      line-height: 1.35;
+    }
+
+    .keypad {
+      grid-area: keypad;
+      width: min(330px, 100%);
+      justify-self: center;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-rows: repeat(4, clamp(50px, 7vh, 62px));
+      gap: 8px;
+    }
+
+    .keypad button {
+      min-width: 0;
+      min-height: 0;
+      border: 1px solid #cbd8e8;
+      border-radius: 8px;
+      background: #f7faff;
+      color: var(--ink);
+      font-size: 1.25rem;
+      font-weight: 900;
+      box-shadow: 0 3px 8px rgba(23, 32, 51, 0.08);
+      touch-action: manipulation;
+      user-select: none;
+    }
+
+    .keypad button:active {
+      transform: translateY(1px);
+      background: #e8f1fc;
+    }
+
+    .keypad button:disabled {
+      cursor: default;
+      opacity: 0.5;
+      transform: none;
+    }
+
+    .keypad .keypad-submit {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+
+    .keypad .keypad-delete {
+      background: #edf3fa;
+    }
+
+    .tag {
+      min-width: 46px;
+      padding: 5px 7px;
+      border-radius: 999px;
+      background: #edf3fa;
+      color: #40516a;
+      font-size: 0.78rem;
+      text-align: center;
+      font-weight: 900;
+    }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      background: rgba(10, 18, 32, 0.56);
+      z-index: 5;
+    }
+
+    .modal.active {
+      display: flex;
+    }
+
+    .modal-box {
+      width: min(520px, 100%);
+      padding: 22px;
+      border-radius: 8px;
+      background: #fff;
+      box-shadow: 0 22px 60px rgba(0, 0, 0, 0.32);
+      text-align: center;
+    }
+
+    .modal-box h2 {
+      margin: 0 0 8px;
+      font-size: 1.65rem;
+    }
+
+    .modal-box p {
+      margin: 0 0 18px;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .teacher-report {
+      position: fixed;
+      inset: 0;
+      display: none;
+      place-items: center;
+      padding: 18px;
+      background: rgba(10, 18, 32, 0.72);
+      z-index: 7;
+    }
+
+    .teacher-report.active {
+      display: grid;
+    }
+
+    .teacher-report-sheet {
+      width: min(760px, 100%);
+      max-height: calc(100vh - 36px);
+      overflow: auto;
+      padding: clamp(20px, 4vw, 34px);
+      border: 1px solid #c9d7e8;
+      border-radius: 8px;
+      background: #fff;
+      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.34);
+    }
+
+    .teacher-report-head {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 16px;
+      align-items: start;
+      padding-bottom: 18px;
+      border-bottom: 2px solid var(--ink);
+    }
+
+    .teacher-report-kicker {
+      margin: 0 0 5px;
+      color: #1d63bd;
+      font-size: 0.78rem;
+      font-weight: 900;
+    }
+
+    .teacher-report-head h2 {
+      margin: 0;
+      font-size: clamp(1.55rem, 4vw, 2.25rem);
+      letter-spacing: 0;
+    }
+
+    .teacher-report-head p:last-child {
+      margin: 7px 0 0;
+      color: var(--muted);
+    }
+
+    .teacher-report-close {
+      width: 38px;
+      height: 38px;
+      padding: 0;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      color: var(--ink);
+      font-size: 1.25rem;
+    }
+
+    .teacher-report-summary {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      margin: 20px 0;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .teacher-report-summary div {
+      padding: 15px 12px;
+      text-align: center;
+    }
+
+    .teacher-report-summary div + div {
+      border-left: 1px solid var(--line);
+    }
+
+    .teacher-report-summary small,
+    .teacher-report-summary strong {
+      display: block;
+    }
+
+    .teacher-report-summary small {
+      color: var(--muted);
+      font-size: 0.75rem;
+      font-weight: 800;
+    }
+
+    .teacher-report-summary strong {
+      margin-top: 5px;
+      font-size: clamp(1.25rem, 4vw, 1.85rem);
+    }
+
+    .teacher-report-note {
+      margin: 0 0 12px;
+      color: var(--muted);
+      font-size: 0.84rem;
+      line-height: 1.45;
+    }
+
+    .teacher-report-table {
+      border-top: 1px solid var(--line);
+    }
+
+    .teacher-report-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 90px 82px 120px;
+      gap: 10px;
+      align-items: center;
+      min-height: 48px;
+      padding: 8px 4px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .teacher-report-row.header {
+      min-height: 36px;
+      color: var(--muted);
+      font-size: 0.73rem;
+      font-weight: 900;
+    }
+
+    .teacher-report-row:not(.header) {
+      font-size: 0.87rem;
+    }
+
+    .teacher-report-row span:not(:first-child) {
+      text-align: center;
+    }
+
+    .teacher-report-footer {
+      margin: 18px 0 0;
+      color: #40516a;
+      font-size: 0.86rem;
+      line-height: 1.5;
+      text-align: center;
+    }
+
+    .capture-scene {
+      position: fixed;
+      inset: 0;
+      display: none;
+      place-items: center;
+      background: rgba(10, 18, 32, 0.94);
+      color: #fff;
+      z-index: 8;
+      overflow: hidden;
+    }
+
+    .capture-scene.active {
+      display: grid;
+    }
+
+    .capture-stage {
+      position: relative;
+      width: min(440px, 92vw);
+      height: min(430px, 80vh);
+      text-align: center;
+    }
+
+    .capture-target {
+      position: absolute;
+      top: 10%;
+      left: 50%;
+      width: min(190px, 44vw);
+      height: min(190px, 44vw);
+      object-fit: contain;
+      image-rendering: pixelated;
+      filter: drop-shadow(0 18px 18px rgba(0, 0, 0, 0.35));
+      transform: translateX(-50%);
+      animation: capture-target 0.72s 0.62s ease-in forwards;
+    }
+
+    .capture-ball {
+      position: absolute;
+      top: 56%;
+      left: 50%;
+      width: 74px;
+      height: 74px;
+      border: 5px solid #202533;
+      border-radius: 50%;
+      background: linear-gradient(#e84142 0 44%, #202533 44% 56%, #fff 56%);
+      box-shadow: 0 14px 26px rgba(0, 0, 0, 0.38);
+      z-index: 2;
+      animation:
+        capture-throw 0.9s cubic-bezier(0.2, 0.8, 0.3, 1) forwards,
+        capture-shake 1.15s 1.48s ease-in-out forwards;
+    }
+
+    .capture-ball::after {
+      content: "";
+      position: absolute;
+      inset: 20px;
+      border: 5px solid #202533;
+      border-radius: 50%;
+      background: #fff;
+      animation: capture-light 0.32s 2.48s ease-in-out 2 alternate;
+    }
+
+    .capture-text {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 5%;
+      margin: 0;
+      padding: 0 12px;
+      font-size: clamp(1.2rem, 5vw, 1.7rem);
+      font-weight: 900;
+      letter-spacing: 0;
+      opacity: 0;
+      transform: translateY(8px);
+      animation: capture-text 0.35s 0.15s ease-out forwards;
+    }
+
+    @keyframes capture-throw {
+      0% {
+        transform: translate(-320px, 190px) rotate(-240deg) scale(0.72);
+      }
+      72% {
+        transform: translate(-50%, -125px) rotate(380deg) scale(1.08);
+      }
+      100% {
+        transform: translate(-50%, -50%) rotate(540deg) scale(1);
+      }
+    }
+
+    @keyframes capture-target {
+      0% {
+        opacity: 1;
+        transform: translateX(-50%) scale(1);
+        filter: brightness(1) drop-shadow(0 18px 18px rgba(0, 0, 0, 0.35));
+      }
+      55% {
+        opacity: 1;
+        transform: translate(-50%, 90px) scale(0.45);
+        filter: brightness(3) drop-shadow(0 0 20px #fff);
+      }
+      100% {
+        opacity: 0;
+        transform: translate(-50%, 150px) scale(0.05);
+        filter: brightness(4) drop-shadow(0 0 26px #fff);
+      }
+    }
+
+    @keyframes capture-shake {
+      0%, 18%, 42%, 66%, 100% {
+        transform: translate(-50%, -50%) rotate(0);
+      }
+      9%, 51% {
+        transform: translate(-62%, -50%) rotate(-16deg);
+      }
+      30%, 78% {
+        transform: translate(-38%, -50%) rotate(16deg);
+      }
+    }
+
+    @keyframes capture-light {
+      to {
+        background: #f2c94c;
+        box-shadow: 0 0 22px #f2c94c;
+      }
+    }
+
+    @keyframes capture-text {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .confetti {
+      position: fixed;
+      pointer-events: none;
+      inset: 0;
+      overflow: hidden;
+      z-index: 6;
+    }
+
+    .confetti i {
+      position: absolute;
+      top: -20px;
+      width: 9px;
+      height: 14px;
+      border-radius: 2px;
+      animation: fall 1.1s ease-in forwards;
+    }
+
+    @keyframes fall {
+      to {
+        transform: translateY(110vh) rotate(520deg);
+      }
+    }
+
+    @media (max-width: 900px) {
+      .hero {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (min-width: 820px) {
+      .app {
+        width: min(100% - 24px, 1160px);
+        padding: 14px 0 20px;
+      }
+
+      .arena {
+        grid-template-columns: minmax(240px, 0.78fr) minmax(420px, 1.22fr);
+        grid-template-rows: auto;
+        align-items: stretch;
+        gap: 12px;
+        padding: 12px;
+      }
+
+      .battlefield,
+      #gameScreen[data-mode="training"] .battlefield {
+        min-height: clamp(380px, calc(100dvh - 170px), 560px);
+        padding: 12px;
+      }
+
+      .sprite {
+        width: min(150px, 15vw);
+        height: min(150px, 15vw);
+      }
+
+      .question-zone {
+        min-width: 0;
+      }
+
+      .question-card {
+        height: 100%;
+        min-height: 0;
+      }
+
+      .question-card {
+        grid-template-columns: minmax(150px, 1fr) minmax(180px, 230px);
+        grid-template-rows: auto minmax(0, 1fr) auto;
+        grid-template-areas:
+          "timer keypad"
+          "work keypad"
+          "message message";
+        align-content: stretch;
+        align-items: center;
+        column-gap: 16px;
+        padding: 14px;
+      }
+
+      .timer-card {
+        align-self: start;
+      }
+
+      .problem {
+        font-size: clamp(2.7rem, 5vw, 4rem);
+      }
+
+      .answer-row {
+        width: 100%;
+      }
+
+      .message {
+        align-self: end;
+      }
+
+      .keypad {
+        width: 100%;
+        align-self: center;
+        grid-template-rows: repeat(4, clamp(52px, 7.5vh, 64px));
+      }
+    }
+
+    @media (min-width: 820px) and (max-height: 620px) {
+      .app {
+        padding-top: 8px;
+      }
+
+      .topbar,
+      .statusbar {
+        margin-bottom: 6px;
+      }
+
+      .subtitle {
+        display: none;
+      }
+
+      .statusbar {
+        padding: 7px 10px;
+      }
+
+      .battlefield,
+      #gameScreen[data-mode="training"] .battlefield {
+        min-height: 320px;
+      }
+
+      .sprite {
+        width: min(118px, 14vw);
+        height: min(118px, 14vw);
+      }
+
+      .question-card {
+        grid-template-rows: auto minmax(0, 1fr) auto;
+        padding: 10px 12px;
+      }
+
+      .keypad {
+        grid-template-rows: repeat(4, 48px);
+        gap: 6px;
+      }
+    }
+
+    @media (max-width: 620px) {
+      .app {
+        width: min(100% - 18px, 1160px);
+        padding-top: 12px;
+      }
+
+      .topbar {
+        align-items: flex-start;
+      }
+
+      .subtitle {
+        display: none;
+      }
+
+      .starter-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .course-header {
+        grid-template-columns: 58px minmax(0, 1fr);
+        gap: 11px;
+      }
+
+      .course-partner {
+        width: 58px;
+        height: 58px;
+      }
+
+      .course-total {
+        grid-column: 1 / -1;
+        display: flex;
+        justify-content: space-between;
+        text-align: left;
+      }
+
+      .day-stage-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .partner-roster {
+        align-items: flex-start;
+        gap: 8px;
+      }
+
+      .partner-roster-label {
+        padding-top: 5px;
+      }
+
+      .test-panel {
+        grid-template-columns: 1fr;
+        gap: 7px;
+      }
+
+      .test-stage-buttons {
+        grid-template-columns: repeat(7, minmax(34px, 1fr));
+      }
+
+      .teacher-report {
+        padding: 8px;
+      }
+
+      .teacher-report-sheet {
+        max-height: calc(100vh - 16px);
+        padding: 18px 14px;
+      }
+
+      .teacher-report-row {
+        grid-template-columns: minmax(0, 1fr) 56px 56px 82px;
+        gap: 5px;
+        font-size: 0.76rem;
+      }
+
+      .hero,
+      .arena {
+        min-height: auto;
+      }
+
+      .arena {
+        gap: 10px;
+        padding: 10px;
+      }
+
+      .starter-card {
+        min-height: 146px;
+        grid-template-columns: 82px 1fr;
+        grid-template-rows: auto auto;
+        align-items: center;
+      }
+
+      .starter-card img {
+        grid-row: 1 / 3;
+        width: 76px;
+        height: 76px;
+      }
+
+      .statusbar {
+        grid-template-columns: auto minmax(120px, 1fr) auto;
+        gap: 9px;
+        padding: 9px 10px;
+      }
+
+      .xp-label {
+        font-size: 0.72rem;
+      }
+
+      .xp-label span:last-child {
+        display: none;
+      }
+
+      .stage-brief strong,
+      .progress-brief strong {
+        font-size: 0.9rem;
+      }
+
+      .battlefield {
+        grid-template-columns: 1fr 1fr;
+        min-height: 210px;
+        gap: 8px;
+        padding: 12px 6px;
+      }
+
+      #gameScreen[data-mode="training"] .battlefield {
+        min-height: 190px;
+      }
+
+      .sprite {
+        width: min(125px, 34vw);
+        height: min(125px, 34vw);
+      }
+
+      .mon-name {
+        min-width: 0;
+        width: 100%;
+        padding: 7px 5px;
+        font-size: 0.84rem;
+      }
+
+      .message {
+        min-height: 24px;
+        font-size: 0.9rem;
+      }
+
+      .question-card {
+        padding: 12px;
+        gap: 9px;
+      }
+
+      .problem {
+        font-size: clamp(2.25rem, 13vw, 3.4rem);
+      }
+
+      .answer-row input {
+        height: 52px;
+        font-size: 1.5rem;
+      }
+
+      .keypad {
+        width: min(300px, 100%);
+        grid-template-rows: repeat(4, 52px);
+        gap: 7px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="ball" aria-hidden="true"></div>
+        <div>
+          <h1>포켓몬 구구단 진화</h1>
+          <p class="subtitle">2단부터 9단까지, 배틀로 외우는 곱셈 마스터 코스</p>
+        </div>
+      </div>
+      <div class="top-actions">
+        <button id="courseBtn" class="reset-icon" type="button" title="스테이지 선택" aria-label="스테이지 선택" hidden>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true">
+            <path d="M8 6h13M8 12h13M8 18h13"></path>
+            <path d="M3 6h.01M3 12h.01M3 18h.01"></path>
+          </svg>
+        </button>
+        <button id="testBtn" class="reset-icon" type="button" title="단계 테스트" aria-label="단계 테스트 도구" aria-expanded="false" hidden>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M9 3h6"></path>
+            <path d="M10 3v6l-5 9a2 2 0 0 0 1.7 3h10.6a2 2 0 0 0 1.7-3l-5-9V3"></path>
+            <path d="M7 15h10"></path>
+          </svg>
+        </button>
+        <button id="resetBtn" class="reset-icon" type="button" title="처음부터" aria-label="처음부터" hidden>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M3 12a9 9 0 1 0 3-6.7L3 8"></path>
+            <path d="M3 3v5h5"></path>
+          </svg>
+        </button>
+        <button id="soundBtn" class="sound-toggle" type="button" title="효과음 켜기/끄기" aria-label="효과음 켜기/끄기">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+            <path d="M15.5 8.5a5 5 0 0 1 0 7"></path>
+            <path d="M19 5a10 10 0 0 1 0 14"></path>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <main>
+      <section id="startScreen" class="screen active">
+        <div class="panel hero">
+          <div class="intro">
+            <h2>전설 포켓몬 포획 작전!</h2>
+            <p>하루 동안 단별 트레이닝과 포획 배틀을 차례로 통과하세요. 그날의 종합 배틀까지 완료하면 다음 날짜에 새로운 범위가 열리고, 마지막에는 2단부터 9단까지 모두 시험합니다.</p>
+            <button id="resumeBtn" class="secondary" type="button" hidden>훈련 목록으로</button>
+          </div>
+          <div class="starter-area">
+            <div id="starterGrid" class="starter-grid" aria-label="스타팅 포켓몬 선택"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="courseScreen" class="screen">
+        <div class="game-shell">
+          <div class="panel course-panel">
+            <div class="course-header">
+              <img id="coursePartner" class="course-partner" alt="현재 파트너" />
+              <div class="course-heading">
+                <h2>날짜별 구구단 훈련</h2>
+                <p id="courseGuide">앞 스테이지를 완료하면 다음 훈련이 열립니다.</p>
+              </div>
+              <div class="course-total">
+                <small>전체 진행</small>
+                <strong id="courseTotal">0/20 스테이지</strong>
+              </div>
+            </div>
+            <div id="testPanel" class="test-panel" hidden>
+              <strong>테스트 클리어</strong>
+              <div id="testStageButtons" class="test-stage-buttons" aria-label="테스트할 단계 선택"></div>
+            </div>
+            <div class="partner-roster">
+              <span class="partner-roster-label">다음 단계<br>파트너</span>
+              <div id="partnerOptions" class="partner-options" aria-label="다음 스테이지 파트너 선택"></div>
+            </div>
+            <div id="courseGrid" class="course-grid" aria-label="날짜별 코스 선택"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="gameScreen" class="screen" data-mode="training">
+        <div class="game-shell">
+          <div class="panel statusbar">
+            <div class="stage-brief">
+              <small>현재 스테이지</small>
+              <strong id="stageBrief">1일차 · 2단</strong>
+            </div>
+            <div class="xp-wrap">
+              <div class="xp-label">
+                <span id="xpText">EXP 0</span>
+                <span id="evoText">진화까지 7스테이지</span>
+              </div>
+              <div class="meter"><span id="xpBar"></span></div>
+            </div>
+            <div class="progress-brief">
+              <small id="modePill">훈련</small>
+              <strong id="progressText">0/0</strong>
+            </div>
+          </div>
+
+          <section class="panel arena" aria-live="polite">
+            <div class="stage-head">
+              <div class="stage-title">
+                <h2 id="stageTitle">2단 훈련</h2>
+                <p id="stageDesc">구구단 문제를 풀어 보세요.</p>
+              </div>
+            </div>
+
+            <div class="battlefield">
+              <div id="capturedCompanions" class="captured-companions" aria-label="포획한 포켓몬"></div>
+              <div class="mon player">
+                <div class="mon-name" id="playerName">포켓몬</div>
+                <img id="playerSprite" class="sprite" alt="내 포켓몬" />
+                <div class="hp"><span id="playerHp"></span></div>
+              </div>
+              <div class="mon enemy">
+                <div class="mon-name" id="enemyName">상대 없음</div>
+                <img id="enemySprite" class="sprite" alt="상대 포켓몬" />
+                <div class="hp"><span id="enemyHp"></span></div>
+              </div>
+            </div>
+
+            <div class="question-zone">
+              <div class="question-card">
+                <div class="timer-card">
+                  <small>남은 시간</small>
+                  <div id="timerValue" class="timer-value">10.0초</div>
+                  <div class="timer-bar"><span id="timerBar"></span></div>
+                </div>
+                <div class="problem-stack">
+                  <div id="problem" class="problem">2 × 1</div>
+                  <form id="answerForm" class="answer-row" autocomplete="off">
+                    <input id="answerInput" type="text" inputmode="none" maxlength="2" readonly aria-label="입력한 정답" />
+                    <button id="submitBtn" class="primary" type="submit">확인</button>
+                  </form>
+                </div>
+                <div id="keypad" class="keypad" aria-label="숫자 키패드">
+                  <button type="button" data-key="1">1</button>
+                  <button type="button" data-key="2">2</button>
+                  <button type="button" data-key="3">3</button>
+                  <button type="button" data-key="4">4</button>
+                  <button type="button" data-key="5">5</button>
+                  <button type="button" data-key="6">6</button>
+                  <button type="button" data-key="7">7</button>
+                  <button type="button" data-key="8">8</button>
+                  <button type="button" data-key="9">9</button>
+                  <button class="keypad-delete" type="button" data-key="delete" title="한 글자 지우기" aria-label="한 글자 지우기">⌫</button>
+                  <button type="button" data-key="0">0</button>
+                  <button class="keypad-submit" type="button" data-key="submit" title="정답 확인" aria-label="정답 확인">✓</button>
+                </div>
+                <div id="message" class="message">정답을 입력하세요.</div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="teacherReport" class="teacher-report" role="dialog" aria-modal="true" aria-labelledby="teacherReportTitle" aria-hidden="true">
+    <section class="teacher-report-sheet">
+      <header class="teacher-report-head">
+        <div>
+          <p class="teacher-report-kicker">구구단 학습 확인서</p>
+          <h2 id="teacherReportTitle">1일차 학습 완료</h2>
+          <p id="teacherReportMeta">완료 날짜 · 학습 범위</p>
+        </div>
+        <button id="teacherReportClose" class="teacher-report-close" type="button" title="확인서 닫기" aria-label="확인서 닫기">×</button>
+      </header>
+      <div class="teacher-report-summary">
+        <div><small>전체 정확도</small><strong id="teacherReportAccuracy">-</strong></div>
+        <div><small>푼 문제</small><strong id="teacherReportAttempts">-</strong></div>
+        <div><small>완료 배틀</small><strong id="teacherReportBattles">-</strong></div>
+      </div>
+      <p id="teacherReportNote" class="teacher-report-note"></p>
+      <div id="teacherReportRows" class="teacher-report-table"></div>
+      <p id="teacherReportFooter" class="teacher-report-footer"></p>
+    </section>
+  </div>
+
+  <div id="modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-box">
+      <h2 id="modalTitle">알림</h2>
+      <p id="modalText">내용</p>
+      <div class="modal-actions">
+        <button id="modalPrimary" class="primary" type="button">계속</button>
+        <button id="modalSecondary" class="secondary" type="button">닫기</button>
+      </div>
+    </div>
+  </div>
+  <div id="captureScene" class="capture-scene" role="status" aria-live="assertive" aria-hidden="true">
+    <div class="capture-stage">
+      <img id="captureTarget" class="capture-target" alt="포획할 포켓몬" />
+      <div class="capture-ball" aria-hidden="true"></div>
+      <p id="captureText" class="capture-text">몬스터볼을 던졌다!</p>
+    </div>
+  </div>
+  <div id="confetti" class="confetti" aria-hidden="true"></div>
+
+  <script>
+    const spriteBase = "./assets/pokemon";
+
+    function partnerLine(key, names, ids, label, desc = "함께 성장하는 모험 파트너") {
+      return { key, names, ids, label, desc };
+    }
+
+    function singleStagePartner(key, name, id, label = "전설 파트너") {
+      return partnerLine(key, [name, name, name], [id, id, id], label, "포획한 뒤 함께 싸울 수 있는 특별한 파트너");
+    }
+
+    const starters = [
+      {
+        key: "ralts",
+        names: ["랄토스", "킬리아", "가디안"],
+        ids: [280, 281, 282],
+        label: "마음 파트너",
+        desc: "차분하게 집중하는 사이킥 파트너"
+      },
+      {
+        key: "togepi",
+        names: ["토게피", "토게틱", "토게키스"],
+        ids: [175, 176, 468],
+        label: "행운 파트너",
+        desc: "포근한 모습으로 행운을 부르는 파트너"
+      },
+      {
+        key: "shinx",
+        names: ["꼬링크", "럭시오", "렌트라"],
+        ids: [403, 404, 405],
+        label: "빛 파트너",
+        desc: "씩씩하고 반짝이는 전기 파트너"
+      },
+      {
+        key: "igglybuff",
+        names: ["푸푸린", "푸린", "푸크린"],
+        ids: [174, 39, 40],
+        label: "노래 파트너",
+        desc: "말랑하고 사랑스러운 노래 파트너"
+      },
+      {
+        key: "popplio",
+        names: ["누리공", "키요공", "누리레느"],
+        ids: [728, 729, 730],
+        label: "물결 파트너",
+        desc: "재주 많고 우아하게 성장하는 물 파트너"
+      },
+      {
+        key: "rowlet",
+        names: ["나몰빼미", "빼미스로우", "모크나이퍼"],
+        ids: [722, 723, 724],
+        label: "숲 파트너",
+        desc: "동그랗고 침착한 숲의 궁수 파트너"
+      },
+      {
+        key: "fennekin",
+        names: ["푸호꼬", "테르나", "마폭시"],
+        ids: [653, 654, 655],
+        label: "불꽃 파트너",
+        desc: "영리하고 따뜻한 불꽃 마법사 파트너"
+      },
+      {
+        key: "litten",
+        names: ["냐오불", "냐오히트", "어흥염"],
+        ids: [725, 726, 727],
+        label: "용기 파트너",
+        desc: "도도하지만 든든한 불꽃 고양이 파트너"
+      },
+      {
+        key: "sprigatito",
+        names: ["나오하", "나로테", "마스카나"],
+        ids: [906, 907, 908],
+        label: "향기 파트너",
+        desc: "호기심 많고 재빠른 풀고양이 파트너"
+      },
+      {
+        key: "hatenna",
+        names: ["몸지브림", "손지브림", "브리무음"],
+        ids: [856, 857, 858],
+        label: "고요 파트너",
+        desc: "감정을 읽고 조용히 응원하는 파트너"
+      },
+      {
+        key: "tinkatink",
+        names: ["어리짱", "벼리짱", "두드리짱"],
+        ids: [957, 958, 959],
+        label: "망치 파트너",
+        desc: "작지만 씩씩한 장난꾸러기 파트너"
+      },
+      {
+        key: "pawmi",
+        names: ["빠모", "빠모트", "빠르모트"],
+        ids: [921, 922, 923],
+        label: "응원 파트너",
+        desc: "포근한 손으로 힘을 나누는 전기 파트너"
+      },
+      partnerLine("pichu", ["피츄", "피카츄", "라이츄"], [172, 25, 26], "번개 파트너"),
+      partnerLine("azurill", ["루리리", "마릴", "마릴리"], [298, 183, 184], "물방울 파트너"),
+      partnerLine("totodile", ["리아코", "엘리게이", "장크로다일"], [158, 159, 160], "힘찬 파트너"),
+      partnerLine("bulbasaur", ["이상해씨", "이상해풀", "이상해꽃"], [1, 2, 3], "새싹 파트너"),
+      partnerLine("charmander", ["파이리", "리자드", "리자몽"], [4, 5, 6], "화염 파트너"),
+      partnerLine("squirtle", ["꼬부기", "어니부기", "거북왕"], [7, 8, 9], "물대포 파트너"),
+      partnerLine("chikorita", ["치코리타", "베이리프", "메가니움"], [152, 153, 154], "잎사귀 파트너"),
+      partnerLine("cyndaquil", ["브케인", "마그케인", "블레이범"], [155, 156, 157], "불씨 파트너"),
+      partnerLine("treecko", ["나무지기", "나무돌이", "나무킹"], [252, 253, 254], "나무 파트너"),
+      partnerLine("torchic", ["아차모", "영치코", "번치코"], [255, 256, 257], "불꽃 파트너"),
+      partnerLine("mudkip", ["물짱이", "늪짱이", "대짱이"], [258, 259, 260], "파도 파트너"),
+      partnerLine("piplup", ["팽도리", "팽태자", "엠페르트"], [393, 394, 395], "황제 파트너"),
+      partnerLine("froakie", ["개구마르", "개굴반장", "개굴닌자"], [656, 657, 658], "닌자 파트너"),
+      partnerLine("grookey", ["흥나숭", "채키몽", "고릴타"], [810, 811, 812], "리듬 파트너"),
+      partnerLine("scorbunny", ["염버니", "래비풋", "에이스번"], [813, 814, 815], "슛 파트너"),
+      partnerLine("sobble", ["울머기", "누겔레온", "인텔리레온"], [816, 817, 818], "저격 파트너"),
+      partnerLine("fuecoco", ["뜨아거", "악뜨거", "라우드본"], [909, 910, 911], "노래불꽃 파트너"),
+      partnerLine("quaxly", ["꾸왁스", "아꾸왁", "웨이니발"], [912, 913, 914], "춤 파트너"),
+      partnerLine("mareep", ["메리프", "보송송", "전룡"], [179, 180, 181], "전구 파트너"),
+      partnerLine("dratini", ["미뇽", "신뇽", "망나뇽"], [147, 148, 149], "용 파트너"),
+      partnerLine("gible", ["딥상어동", "한바이트", "한카리아스"], [443, 444, 445], "대지 파트너"),
+      partnerLine("bagon", ["아공이", "쉘곤", "보만다"], [371, 372, 373], "비상 파트너"),
+      partnerLine("larvitar", ["애버라스", "데기라스", "마기라스"], [246, 247, 248], "바위 파트너"),
+      partnerLine("beldum", ["메탕", "메탕구", "메타그로스"], [374, 375, 376], "강철 파트너"),
+      partnerLine("cleffa", ["삐", "삐삐", "픽시"], [173, 35, 36], "별빛 파트너"),
+      partnerLine("happiny", ["핑복", "럭키", "해피너스"], [440, 113, 242], "행복 파트너"),
+      singleStagePartner("mew", "뮤", 151, "환상 파트너"),
+      singleStagePartner("celebi", "세레비", 251, "시간 파트너"),
+      singleStagePartner("jirachi", "지라치", 385, "소원 파트너"),
+      singleStagePartner("manaphy", "마나피", 490, "바다 파트너"),
+      singleStagePartner("shaymin", "쉐이미", 492, "감사 파트너"),
+      singleStagePartner("victini", "비크티니", 494, "승리 파트너"),
+      singleStagePartner("meloetta", "메로엣타", 648, "선율 파트너"),
+      singleStagePartner("diancie", "디안시", 719, "보석 파트너"),
+      singleStagePartner("moltres", "파이어", 146),
+      singleStagePartner("articuno", "프리져", 144),
+      singleStagePartner("zapdos", "썬더", 145),
+      singleStagePartner("mewtwo", "뮤츠", 150),
+      singleStagePartner("suicune", "스이쿤", 245),
+      singleStagePartner("latias", "라티아스", 380),
+      singleStagePartner("cresselia", "크레세리아", 488),
+      singleStagePartner("lugia", "루기아", 249),
+      singleStagePartner("rayquaza", "레쿠쟈", 384),
+      singleStagePartner("arceus", "아르세우스", 493)
+    ];
+
+    const firstPartnerKey = "pichu";
+
+    const gameBalance = {
+      time: 10,
+      bossTime: 6.5,
+      trainingMinimumAttempts: 20,
+      trainingAccuracy: 0.9,
+      damage: 25,
+      penalty: 16,
+      score: 12,
+      exp: 18
+    };
+
+    const encounterPartnerPool = [
+      "pichu", "azurill", "totodile", "togepi", "shinx", "igglybuff", "popplio", "rowlet",
+      "fennekin", "litten", "sprigatito", "hatenna", "tinkatink", "pawmi",
+      "bulbasaur", "charmander", "squirtle", "chikorita", "cyndaquil", "treecko", "torchic",
+      "mudkip", "piplup", "froakie", "grookey", "scorbunny", "sobble", "fuecoco", "quaxly",
+      "mareep", "dratini", "gible", "bagon", "larvitar", "beldum", "cleffa", "happiny"
+    ];
+
+    const legendaryPartnerPool = [
+      "mew", "celebi", "jirachi", "manaphy", "shaymin", "victini",
+      "meloetta", "diancie", "mewtwo", "suicune", "latias", "cresselia"
+    ];
+
+    const dailyPrograms = [
+      {
+        id: "day1",
+        day: "1일차",
+        title: "2~4단 기초",
+        stages: [
+          { id: "d1-2", label: "2단", tables: [2], hp: 70, routeIndex: 0 },
+          { id: "d1-3", label: "3단", tables: [3], hp: 78, routeIndex: 1 },
+          { id: "d1-4", label: "4단", tables: [4], hp: 86, routeIndex: 2 },
+          { id: "d1-final", label: "2·3·4단 종합", tables: [2, 3, 4], hp: 145, legendary: true, boss: { name: "파이어", id: 146, partnerKey: "moltres" } }
+        ]
+      },
+      {
+        id: "day2",
+        day: "2일차",
+        title: "5~7단 기초",
+        stages: [
+          { id: "d2-5", label: "5단", tables: [5], hp: 92, routeIndex: 3 },
+          { id: "d2-6", label: "6단", tables: [6], hp: 100, routeIndex: 4 },
+          { id: "d2-7", label: "7단", tables: [7], hp: 110, routeIndex: 5 },
+          { id: "d2-final", label: "5·6·7단 종합", tables: [5, 6, 7], hp: 165, legendary: true, boss: { name: "프리져", id: 144, partnerKey: "articuno" } }
+        ]
+      },
+      {
+        id: "day3",
+        day: "3일차",
+        title: "8~9단 기초",
+        stages: [
+          { id: "d3-8", label: "8단", tables: [8], hp: 120, routeIndex: 6 },
+          { id: "d3-9", label: "9단", tables: [9], hp: 132, routeIndex: 7 },
+          { id: "d3-final", label: "8·9단 종합", tables: [8, 9], hp: 185, legendary: true, boss: { name: "썬더", id: 145, partnerKey: "zapdos" } }
+        ]
+      },
+      {
+        id: "day4",
+        day: "4일차",
+        title: "짝수단 연결",
+        stages: [
+          { id: "d4-24", label: "2·4단", tables: [2, 4], hp: 145, routeIndex: 8 },
+          { id: "d4-68", label: "6·8단", tables: [6, 8], hp: 155, routeIndex: 9 },
+          { id: "d4-final", label: "2·4·6·8단 종합", tables: [2, 4, 6, 8], hp: 205, legendary: true, boss: { name: "마나피", id: 490, partnerKey: "manaphy" } }
+        ]
+      },
+      {
+        id: "day5",
+        day: "5일차",
+        title: "홀수단 연결",
+        stages: [
+          { id: "d5-35", label: "3·5단", tables: [3, 5], hp: 155, routeIndex: 10 },
+          { id: "d5-79", label: "7·9단", tables: [7, 9], hp: 165, routeIndex: 11 },
+          { id: "d5-final", label: "3·5·7·9단 종합", tables: [3, 5, 7, 9], hp: 225, legendary: true, boss: { name: "크레세리아", id: 488, partnerKey: "cresselia" } }
+        ]
+      },
+      {
+        id: "day6",
+        day: "6일차",
+        title: "구구단 마스터",
+        stages: [
+          { id: "d6-low", label: "2~5단 종합", tables: [2, 3, 4, 5], hp: 180, routeIndex: 12 },
+          { id: "d6-high", label: "6~9단 종합", tables: [6, 7, 8, 9], hp: 195, routeIndex: 13 },
+          { id: "d6-final", label: "2~9단 최종", tables: [2, 3, 4, 5, 6, 7, 8, 9], hp: 260, legendary: true, boss: { name: "아르세우스", id: 493, partnerKey: "arceus" } }
+        ]
+      }
+    ];
+
+    const courses = dailyPrograms.flatMap((program, dayIndex) => (
+      program.stages.map((stage, stageIndex) => ({
+        ...stage,
+        capture: true,
+        dayId: program.id,
+        day: program.day,
+        dayTitle: program.title,
+        dayIndex,
+        stageIndex,
+        isDayFinal: stageIndex === program.stages.length - 1
+      }))
+    ));
+
+    const evolutionCourseThresholds = [
+      0,
+      Math.round(courses.length / 3),
+      Math.round((courses.length * 2) / 3)
+    ];
+
+    const els = {
+      startScreen: document.querySelector("#startScreen"),
+      courseScreen: document.querySelector("#courseScreen"),
+      gameScreen: document.querySelector("#gameScreen"),
+      starterGrid: document.querySelector("#starterGrid"),
+      resumeBtn: document.querySelector("#resumeBtn"),
+      courseBtn: document.querySelector("#courseBtn"),
+      testBtn: document.querySelector("#testBtn"),
+      testPanel: document.querySelector("#testPanel"),
+      testStageButtons: document.querySelector("#testStageButtons"),
+      coursePartner: document.querySelector("#coursePartner"),
+      courseGuide: document.querySelector("#courseGuide"),
+      courseTotal: document.querySelector("#courseTotal"),
+      partnerOptions: document.querySelector("#partnerOptions"),
+      courseGrid: document.querySelector("#courseGrid"),
+      teacherReport: document.querySelector("#teacherReport"),
+      teacherReportTitle: document.querySelector("#teacherReportTitle"),
+      teacherReportMeta: document.querySelector("#teacherReportMeta"),
+      teacherReportAccuracy: document.querySelector("#teacherReportAccuracy"),
+      teacherReportAttempts: document.querySelector("#teacherReportAttempts"),
+      teacherReportBattles: document.querySelector("#teacherReportBattles"),
+      teacherReportNote: document.querySelector("#teacherReportNote"),
+      teacherReportRows: document.querySelector("#teacherReportRows"),
+      teacherReportFooter: document.querySelector("#teacherReportFooter"),
+      teacherReportClose: document.querySelector("#teacherReportClose"),
+      soundBtn: document.querySelector("#soundBtn"),
+      stageBrief: document.querySelector("#stageBrief"),
+      xpText: document.querySelector("#xpText"),
+      evoText: document.querySelector("#evoText"),
+      xpBar: document.querySelector("#xpBar"),
+      progressText: document.querySelector("#progressText"),
+      stageTitle: document.querySelector("#stageTitle"),
+      stageDesc: document.querySelector("#stageDesc"),
+      modePill: document.querySelector("#modePill"),
+      playerName: document.querySelector("#playerName"),
+      playerSprite: document.querySelector("#playerSprite"),
+      playerHp: document.querySelector("#playerHp"),
+      capturedCompanions: document.querySelector("#capturedCompanions"),
+      enemyName: document.querySelector("#enemyName"),
+      enemySprite: document.querySelector("#enemySprite"),
+      enemyHp: document.querySelector("#enemyHp"),
+      problem: document.querySelector("#problem"),
+      answerForm: document.querySelector("#answerForm"),
+      answerInput: document.querySelector("#answerInput"),
+      submitBtn: document.querySelector("#submitBtn"),
+      keypad: document.querySelector("#keypad"),
+      message: document.querySelector("#message"),
+      timerValue: document.querySelector("#timerValue"),
+      timerBar: document.querySelector("#timerBar"),
+      resetBtn: document.querySelector("#resetBtn"),
+      modal: document.querySelector("#modal"),
+      modalTitle: document.querySelector("#modalTitle"),
+      modalText: document.querySelector("#modalText"),
+      modalPrimary: document.querySelector("#modalPrimary"),
+      modalSecondary: document.querySelector("#modalSecondary"),
+      captureScene: document.querySelector("#captureScene"),
+      captureTarget: document.querySelector("#captureTarget"),
+      captureText: document.querySelector("#captureText"),
+      confetti: document.querySelector("#confetti")
+    };
+
+    let state = {
+      starterKey: null,
+      nextPartnerKey: null,
+      currentCourseId: "d1-2",
+      mode: "training",
+      score: 0,
+      exp: 0,
+      streak: 0,
+      correctInStage: 0,
+      trainingAttempts: 0,
+      trainingCovered: [],
+      playerHp: 100,
+      enemyHp: 0,
+      question: null,
+      deadline: 0,
+      timerId: 0,
+      locked: false,
+      muted: false,
+      mistakeWeights: {},
+      captured: [],
+      unlockedStarterKeys: [firstPartnerKey],
+      completedCourses: [],
+      courseProgress: {},
+      dailyReports: {},
+      firstClearDate: null,
+      courseClearDates: {}
+    };
+
+    const storageKey = "pokemon-times-table-evolution";
+    const storageVersion = 11;
+    function sprite(id, animated = true) {
+      return `${spriteBase}/${id}.${animated ? "gif" : "png"}`;
+    }
+
+    function partnerByKey(key) {
+      return starters.find((starter) => starter.key === key) || null;
+    }
+
+    function firstPartner() {
+      return partnerByKey(firstPartnerKey) || starters[0];
+    }
+
+    function currentStarter() {
+      return partnerByKey(state.starterKey) || firstPartner();
+    }
+
+    function nextPartner() {
+      return starters.find((starter) => starter.key === state.nextPartnerKey) || currentStarter();
+    }
+
+    function isStarterUnlocked(starterKey) {
+      return state.unlockedStarterKeys.includes(starterKey);
+    }
+
+    function currentCourse() {
+      return courses.find((course) => course.id === state.currentCourseId) || courses[0];
+    }
+
+    function partnerRouteOffset(partnerKey, pool) {
+      if (partnerKey === firstPartnerKey && pool === encounterPartnerPool) return 1;
+      const poolIndex = pool.indexOf(partnerKey);
+      if (poolIndex >= 0) return (poolIndex * 5 + 1) % pool.length;
+      return [...partnerKey].reduce((total, character) => total + character.charCodeAt(0), 0) % pool.length;
+    }
+
+    function routedPartnerForCourse(course) {
+      const pool = course.legendary ? legendaryPartnerPool : encounterPartnerPool;
+      const courseStep = Math.max(0, Number(course.routeIndex) || 0);
+      const routeStride = currentStarter().key === firstPartnerKey && pool === encounterPartnerPool ? 1 : 7;
+      let poolIndex = (partnerRouteOffset(currentStarter().key, pool) + courseStep * routeStride) % pool.length;
+      if (pool[poolIndex] === currentStarter().key) poolIndex = (poolIndex + 1) % pool.length;
+      return partnerByKey(pool[poolIndex]) || firstPartner();
+    }
+
+    function bossForCourse(course = currentCourse()) {
+      const routedPartner = course.boss ? null : routedPartnerForCourse(course);
+      const routedBoss = routedPartner
+        ? { name: routedPartner.names[0], id: routedPartner.ids[0], partnerKey: routedPartner.key }
+        : course.boss;
+      return { ...routedBoss, hp: course.hp };
+    }
+
+    function courseIndex(courseId) {
+      return courses.findIndex((course) => course.id === courseId);
+    }
+
+    function localDateKey(date = new Date()) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    }
+
+    function dateKeyDayNumber(dateKey) {
+      const [year, month, day] = String(dateKey || "").split("-").map(Number);
+      if (!year || !month || !day) return null;
+      return Math.floor(Date.UTC(year, month - 1, day) / 86400000);
+    }
+
+    function addDaysToDateKey(dateKey, amount) {
+      const dayNumber = dateKeyDayNumber(dateKey);
+      if (dayNumber === null) return null;
+      const date = new Date((dayNumber + amount) * 86400000);
+      return date.toISOString().slice(0, 10);
+    }
+
+    function courseReleaseDate(index) {
+      const course = courses[index];
+      if (!course || course.dayIndex === 0) return null;
+      return state.firstClearDate ? addDaysToDateKey(state.firstClearDate, course.dayIndex) : null;
+    }
+
+    function formatDateLabel(dateKey) {
+      const parts = String(dateKey || "").split("-");
+      return parts.length === 3 ? `${Number(parts[1])}/${Number(parts[2])}` : "다음 날";
+    }
+
+    function isCourseUnlocked(index) {
+      if (index === 0) return true;
+      const course = courses[index];
+      const previousComplete = state.completedCourses.includes(courses[index - 1].id);
+      if (!previousComplete) return false;
+      if (course.dayIndex === 0) return true;
+      const releaseDay = dateKeyDayNumber(courseReleaseDate(index));
+      const today = dateKeyDayNumber(localDateKey());
+      return releaseDay !== null && today >= releaseDay;
+    }
+
+    function evolutionLevel() {
+      const completedCount = state.completedCourses.length;
+      if (completedCount >= evolutionCourseThresholds[2]) return 2;
+      if (completedCount >= evolutionCourseThresholds[1]) return 1;
+      return 0;
+    }
+
+    function playTone(type) {
+      if (state.muted) return;
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContext) return;
+      const ctx = new AudioContext();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const notes = {
+        good: [660, 880],
+        bad: [220, 170],
+        evolve: [523, 659, 784, 1046],
+        win: [587, 740, 880],
+        capture: [392, 523, 659, 784],
+        hit: [330, 247]
+      }[type] || [440];
+      osc.type = type === "bad" ? "sawtooth" : "triangle";
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      gain.gain.value = 0.055;
+      osc.start();
+      notes.forEach((freq, index) => {
+        osc.frequency.setValueAtTime(freq, ctx.currentTime + index * 0.08);
+      });
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + notes.length * 0.09 + 0.08);
+      osc.stop(ctx.currentTime + notes.length * 0.09 + 0.1);
+    }
+
+    function cleanCaptured(captured) {
+      return Array.isArray(captured)
+        ? captured
+          .map((pokemon) => {
+            const id = Number(pokemon?.id);
+            const name = String(pokemon?.name || "");
+            const savedPartner = partnerByKey(pokemon?.partnerKey);
+            const inferredPartner = starters.find((partner) => (
+              partner.ids.includes(id) && partner.names.includes(name)
+            ));
+            return {
+              id,
+              name,
+              partnerKey: savedPartner?.key || inferredPartner?.key || null
+            };
+          })
+          .filter((pokemon) => Number.isFinite(pokemon.id) && pokemon.name)
+        : [];
+    }
+
+    function cleanDailyReports(reports) {
+      if (!reports || typeof reports !== "object") return {};
+      const cleaned = {};
+      dailyPrograms.forEach((program) => {
+        const source = reports[program.id];
+        if (!source || typeof source !== "object") return;
+        const stages = {};
+        program.stages.forEach((stage) => {
+          const record = source.stages?.[stage.id];
+          if (!record || typeof record !== "object") return;
+          const attempts = Math.max(0, Number(record.attempts) || 0);
+          const correct = Math.min(attempts, Math.max(0, Number(record.correct) || 0));
+          stages[stage.id] = {
+            attempts,
+            correct,
+            accuracy: attempts ? Math.round((correct / attempts) * 100) : null,
+            bossName: String(record.bossName || "포획 완료"),
+            bossId: Number(record.bossId) || null,
+            partnerName: String(record.partnerName || ""),
+            completedAt: dateKeyDayNumber(record.completedAt) !== null ? record.completedAt : null,
+            testCleared: Boolean(record.testCleared)
+          };
+        });
+        if (Object.keys(stages).length) {
+          cleaned[program.id] = {
+            clearDate: dateKeyDayNumber(source.clearDate) !== null ? source.clearDate : null,
+            stages
+          };
+        }
+      });
+      return cleaned;
+    }
+
+    function recordStageReport(course, boss, testCleared = false) {
+      const report = state.dailyReports[course.dayId] || { clearDate: null, stages: {} };
+      const existing = report.stages[course.id];
+      if (testCleared && existing && !existing.testCleared) return;
+      const attempts = testCleared ? trainingAttemptGoal(course) : state.trainingAttempts;
+      const correct = testCleared ? attempts : state.correctInStage;
+      const partner = currentStarter();
+      report.stages[course.id] = {
+        attempts,
+        correct,
+        accuracy: attempts ? Math.round((correct / attempts) * 100) : null,
+        bossName: boss.name,
+        bossId: boss.id,
+        partnerName: partner.names[evolutionLevel()],
+        completedAt: localDateKey(),
+        testCleared
+      };
+      if (course.isDayFinal) report.clearDate = localDateKey();
+      state.dailyReports[course.dayId] = report;
+    }
+
+    function snapshotCourseProgress() {
+      if (!state.currentCourseId) return;
+      state.courseProgress[state.currentCourseId] = {
+        partnerKey: state.starterKey,
+        mode: state.mode,
+        streak: state.streak,
+        correctInStage: state.correctInStage,
+        trainingAttempts: state.trainingAttempts,
+        trainingCovered: [...state.trainingCovered],
+        playerHp: state.playerHp,
+        enemyHp: state.enemyHp,
+        mistakeWeights: { ...state.mistakeWeights }
+      };
+    }
+
+    function restoreCourseProgress(courseId, restart = false) {
+      const course = courses.find((item) => item.id === courseId) || courses[0];
+      state.currentCourseId = course.id;
+      if (restart) delete state.courseProgress[course.id];
+      const progress = state.courseProgress[course.id] || {};
+      if (isStarterUnlocked(progress.partnerKey)) state.starterKey = progress.partnerKey;
+      const validKeys = new Set(stageQuestions(course).map(questionKey));
+      const attempts = Math.max(0, Number(progress.trainingAttempts) || 0);
+      state.mode = progress.mode === "boss" ? "boss" : "training";
+      state.streak = Math.max(0, Number(progress.streak) || 0);
+      state.correctInStage = Math.min(attempts, Math.max(0, Number(progress.correctInStage) || 0));
+      state.trainingAttempts = attempts;
+      state.trainingCovered = Array.isArray(progress.trainingCovered)
+        ? [...new Set(progress.trainingCovered.filter((key) => validKeys.has(key)))]
+        : [];
+      state.playerHp = Math.max(0, Math.min(100, Number.isFinite(Number(progress.playerHp)) ? Number(progress.playerHp) : 100));
+      state.enemyHp = Math.max(0, Number(progress.enemyHp) || 0);
+      state.mistakeWeights = progress.mistakeWeights && typeof progress.mistakeWeights === "object"
+        ? { ...progress.mistakeWeights }
+        : {};
+      state.question = null;
+      state.deadline = 0;
+      state.timerId = 0;
+      state.locked = false;
+    }
+
+    function save(includeCourseProgress = true) {
+      if (!state.starterKey) return;
+      if (includeCourseProgress) snapshotCourseProgress();
+      localStorage.setItem(storageKey, JSON.stringify({
+        version: storageVersion,
+        starterKey: state.starterKey,
+        nextPartnerKey: state.nextPartnerKey,
+        currentCourseId: state.currentCourseId,
+        score: state.score,
+        exp: state.exp,
+        muted: state.muted,
+        captured: state.captured,
+        unlockedStarterKeys: state.unlockedStarterKeys,
+        completedCourses: state.completedCourses,
+        courseProgress: state.courseProgress,
+        dailyReports: state.dailyReports,
+        firstClearDate: state.firstClearDate,
+        courseClearDates: state.courseClearDates
+      }));
+    }
+
+    const legacyCourseOrder = [
+      "day1", "day2", "day3", "day4", "day5", "day6", "day7", "day8",
+      "day9", "day10", "day11", "day12", "final"
+    ];
+
+    const legacyStageMap = {
+      day1: ["d1-2"],
+      day2: ["d1-3"],
+      day3: ["d1-4"],
+      day4: ["d2-5"],
+      day5: ["d2-6"],
+      day6: ["d2-7"],
+      day7: ["d3-8"],
+      day8: ["d3-9"],
+      day9: [],
+      day10: ["d1-final"],
+      day11: ["d2-final"],
+      day12: ["d3-final"],
+      final: ["d6-final"]
+    };
+
+    const legacyDailyMap = {
+      day1: ["d1-2", "d1-3", "d1-4", "d1-final"],
+      day2: ["d2-5", "d2-6", "d2-7", "d2-final"],
+      day3: ["d3-8", "d3-9", "d3-final"],
+      even: ["d4-24", "d4-68", "d4-final"],
+      odd: ["d5-35", "d5-79", "d5-final"],
+      lowmix: ["d6-low"],
+      highmix: ["d6-high"],
+      final: ["d6-final"]
+    };
+
+    function load() {
+      try {
+        const data = JSON.parse(localStorage.getItem(storageKey) || "null");
+        if (!data || ![2, 3, 4, 5, 6, 7, 8, 9, 10, storageVersion].includes(data.version) || !data.starterKey) return false;
+        const isCurrentVersion = data.version === storageVersion;
+        const hasStageCourseShape = [10, storageVersion].includes(data.version);
+        const legacyCompletedIndexes = Array.isArray(data.completed) ? data.completed.map(Number) : [];
+        let completedCourses;
+
+        if (hasStageCourseShape) {
+          completedCourses = Array.isArray(data.completedCourses)
+            ? data.completedCourses.filter((id) => courses.some((course) => course.id === id))
+            : [];
+        } else if (data.version === 5) {
+          completedCourses = (Array.isArray(data.completedCourses) ? data.completedCourses : [])
+            .flatMap((id) => legacyDailyMap[id] || []);
+        } else {
+          const legacyIds = data.version >= 6 && Array.isArray(data.completedCourses)
+            ? data.completedCourses
+            : legacyCompletedIndexes.map((index) => legacyCourseOrder[index]).filter(Boolean);
+          completedCourses = legacyIds.flatMap((id) => legacyStageMap[id] || []);
+        }
+
+        completedCourses = [...new Set(completedCourses)];
+        const savedCourseId = hasStageCourseShape && courses.some((course) => course.id === data.currentCourseId)
+          ? data.currentCourseId
+          : courses.find((course, index) => (
+              !completedCourses.includes(course.id)
+              && (index === 0 || completedCourses.includes(courses[index - 1].id))
+            ))?.id || courses[0].id;
+        const captured = cleanCaptured(data.captured);
+        const capturedPartnerKeys = captured.map((pokemon) => pokemon.partnerKey).filter(Boolean);
+        const savedUnlockedStarterKeys = hasStageCourseShape && Array.isArray(data.unlockedStarterKeys)
+          ? data.unlockedStarterKeys.filter((key) => starters.some((starter) => starter.key === key))
+          : [];
+        const unlockedStarterKeys = [...new Set([
+          firstPartnerKey,
+          data.starterKey,
+          ...savedUnlockedStarterKeys,
+          ...capturedPartnerKeys
+        ])];
+        const savedNextPartnerKey = partnerByKey(data.nextPartnerKey)
+          && unlockedStarterKeys.includes(data.nextPartnerKey)
+          ? data.nextPartnerKey
+          : data.starterKey;
+        const completedDayIndexes = dailyPrograms
+          .map((program, dayIndex) => (
+            program.stages.every((stage) => completedCourses.includes(stage.id)) ? dayIndex : -1
+          ))
+          .filter((dayIndex) => dayIndex >= 0);
+        const highestCompletedDay = completedDayIndexes.length ? Math.max(...completedDayIndexes) : -1;
+        const inferredFirstClearDate = completedDayIndexes.includes(0)
+          ? addDaysToDateKey(localDateKey(), -highestCompletedDay)
+          : null;
+        const firstClearDate = hasStageCourseShape && dateKeyDayNumber(data.firstClearDate) !== null
+          ? data.firstClearDate
+          : inferredFirstClearDate;
+        const inferredClearDates = Object.fromEntries(completedCourses.map((id) => {
+          const course = courses.find((item) => item.id === id);
+          const clearDate = firstClearDate
+            ? addDaysToDateKey(firstClearDate, course?.dayIndex || 0)
+            : localDateKey();
+          return [id, clearDate];
+        }));
+        const courseClearDates = hasStageCourseShape && data.courseClearDates && typeof data.courseClearDates === "object"
+          ? Object.fromEntries(Object.entries(data.courseClearDates).filter(([id, date]) => (
+              courses.some((course) => course.id === id) && dateKeyDayNumber(date) !== null
+            )))
+          : inferredClearDates;
+
+        state = {
+          ...state,
+          starterKey: data.starterKey,
+          nextPartnerKey: savedNextPartnerKey,
+          currentCourseId: savedCourseId,
+          score: Math.max(0, Number(data.score) || 0),
+          exp: Math.max(0, Number(data.exp) || 0),
+          muted: Boolean(data.muted),
+          captured,
+          unlockedStarterKeys,
+          completedCourses,
+          courseProgress: hasStageCourseShape && data.courseProgress && typeof data.courseProgress === "object"
+            ? data.courseProgress
+            : {},
+          dailyReports: isCurrentVersion ? cleanDailyReports(data.dailyReports) : {},
+          firstClearDate,
+          courseClearDates
+        };
+        restoreCourseProgress(savedCourseId);
+        return true;
+      } catch {
+        return false;
+      }
+    }
+
+
+    function resetGame() {
+      clearInterval(state.timerId);
+      localStorage.removeItem(storageKey);
+      state = {
+        starterKey: null,
+        nextPartnerKey: null,
+        currentCourseId: "d1-2",
+        mode: "training",
+        score: 0,
+        exp: 0,
+        streak: 0,
+        correctInStage: 0,
+        trainingAttempts: 0,
+        trainingCovered: [],
+        playerHp: 100,
+        enemyHp: 0,
+        question: null,
+        deadline: 0,
+        timerId: 0,
+        locked: false,
+        muted: state.muted,
+        mistakeWeights: {},
+        captured: [],
+        unlockedStarterKeys: [firstPartnerKey],
+        completedCourses: [],
+        courseProgress: {},
+        dailyReports: {},
+        firstClearDate: null,
+        courseClearDates: {}
+      };
+      els.testPanel.hidden = true;
+      els.testBtn.setAttribute("aria-expanded", "false");
+      closeTeacherReport();
+      showScreen("start");
+      renderStart();
+    }
+
+    function showScreen(name) {
+      els.startScreen.classList.toggle("active", name === "start");
+      els.courseScreen.classList.toggle("active", name === "courses");
+      els.gameScreen.classList.toggle("active", name === "game");
+      if (name !== "courses") {
+        els.testPanel.hidden = true;
+        els.testBtn.setAttribute("aria-expanded", "false");
+      }
+      els.resetBtn.hidden = name === "start";
+      els.testBtn.hidden = name === "start";
+      els.courseBtn.hidden = name !== "game";
+    }
+
+    function renderStart() {
+      const starter = firstPartner();
+      els.starterGrid.classList.add("single");
+      els.starterGrid.innerHTML = `
+        <button class="starter-card" type="button" data-starter="${starter.key}" aria-label="${starter.names[0]}와 출발">
+          <img src="${sprite(starter.ids[0])}" alt="${starter.names[0]}" onerror="this.src='${sprite(starter.ids[0], false)}'">
+          <strong>${starter.names[0]} · 첫 파트너</strong>
+          <span>박사가 정해 준 첫 동료입니다. 날짜별 임무를 완료하면 새로운 파트너가 합류합니다.</span>
+        </button>`;
+      els.resumeBtn.hidden = !localStorage.getItem(storageKey);
+    }
+
+    function renderCourseSelect() {
+      const starter = nextPartner();
+      const level = evolutionLevel();
+      const nextIndex = courses.findIndex((course) => !state.completedCourses.includes(course.id));
+      els.coursePartner.src = sprite(starter.ids[level]);
+      els.coursePartner.onerror = () => { els.coursePartner.src = sprite(starter.ids[level], false); };
+      els.courseTotal.textContent = `${state.completedCourses.length}/${courses.length} 스테이지`;
+      els.courseGuide.textContent = state.completedCourses.length === courses.length
+        ? `${starter.names[level]}와 함께 원하는 스테이지를 다시 훈련할 수 있습니다.`
+        : nextIndex > 0 && !isCourseUnlocked(nextIndex)
+          ? `${starter.names[level]}을(를) 다음 파트너로 선택했습니다. ${formatDateLabel(courseReleaseDate(nextIndex))}에 ${courses[nextIndex].day} 훈련이 열립니다.`
+          : nextIndex === 0
+            ? `${starter.names[level]}와 첫 배틀에서 이기면 상대 포켓몬이 새 파트너 후보가 됩니다.`
+            : `${starter.names[level]}와 함께 다음 스테이지를 시작합니다. 다른 파트너를 골라도 됩니다.`;
+      els.partnerOptions.innerHTML = starters.filter((partner) => isStarterUnlocked(partner.key)).map((partner) => {
+        const selected = partner.key === state.nextPartnerKey;
+        return `
+          <button class="partner-option${selected ? " selected" : ""}" type="button" data-partner="${partner.key}" title="${partner.names[level]}을(를) 다음 스테이지 파트너로 선택">
+            <img src="${sprite(partner.ids[level])}" alt="" onerror="this.src='${sprite(partner.ids[level], false)}'">
+            <span>${partner.names[level]}</span>
+          </button>`;
+      }).join("");
+      els.courseGrid.innerHTML = dailyPrograms.map((program, dayIndex) => {
+        const dayCourses = courses.filter((course) => course.dayIndex === dayIndex);
+        const dayComplete = dayCourses.every((course) => state.completedCourses.includes(course.id));
+        const previousDayComplete = dayIndex === 0 || dailyPrograms[dayIndex - 1].stages.every((stage) => (
+          state.completedCourses.includes(stage.id)
+        ));
+        const firstCourseIndex = courses.findIndex((course) => course.dayIndex === dayIndex);
+        const releaseDate = courseReleaseDate(firstCourseIndex);
+        const dayStatus = dayComplete
+          ? "완료"
+          : !previousDayComplete
+            ? "이전 날짜 먼저"
+          : dayIndex === 0 || isCourseUnlocked(firstCourseIndex)
+            ? "진행 가능"
+            : `${formatDateLabel(releaseDate)} 열림`;
+        const stageButtons = dayCourses.map((course) => {
+          const index = courseIndex(course.id);
+          const completed = state.completedCourses.includes(course.id);
+          const unlocked = isCourseUnlocked(index);
+          const progress = state.courseProgress[course.id];
+          const previousComplete = index === 0 || state.completedCourses.includes(courses[index - 1].id);
+          const status = completed
+            ? "완료 · 다시"
+            : !previousComplete
+              ? "이전 단계"
+              : !unlocked
+                ? `${formatDateLabel(courseReleaseDate(index))} 열림`
+                : progress?.trainingAttempts
+                  ? "이어하기"
+                  : "시작";
+          const recommended = index === nextIndex;
+          return `
+            <button class="course-card${completed ? " completed" : ""}${recommended ? " recommended" : ""}" type="button" data-course="${course.id}" ${unlocked || completed ? "" : "disabled"}>
+              <span class="course-number">${completed ? "✓" : course.stageIndex + 1}</span>
+              <span class="course-copy">
+                <strong>${course.label}${course.isDayFinal ? " · 최종" : ""}</strong>
+                <span>${course.tables.join("·")}단 · ${trainingAttemptGoal(course)}문제 · 정확도 90%</span>
+              </span>
+              <span class="course-state">${status}</span>
+            </button>`;
+        }).join("");
+        return `
+          <section class="day-course-group" aria-label="${program.day} ${program.title}">
+            <div class="day-course-head">
+              <strong>${program.day} · ${program.title}</strong>
+              <div class="day-course-actions">
+                <span>${dayStatus}</span>
+                ${dayComplete ? `
+                  <button class="teacher-report-button" type="button" data-report-day="${dayIndex}" title="${program.day} 학습 확인서" aria-label="${program.day} 학습 확인서 열기">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                      <path d="M14 2v6h6M8 13h8M8 17h6"></path>
+                    </svg>
+                  </button>` : ""}
+              </div>
+            </div>
+            <div class="day-stage-grid">${stageButtons}</div>
+          </section>`;
+      }).join("");
+      els.testStageButtons.innerHTML = courses.map((course, index) => {
+        const completed = state.completedCourses.includes(course.id);
+        return `
+          <button class="test-stage-button${completed ? " completed" : ""}" type="button" data-test-stage="${index}" title="${course.day} ${course.label}까지 테스트 클리어">
+            ${completed ? "✓" : `${course.dayIndex + 1}-${course.stageIndex + 1}`}
+          </button>`;
+      }).join("");
+    }
+
+    function showTeacherReport(dayIndex) {
+      const program = dailyPrograms[dayIndex];
+      if (!program) return;
+      const dayCourses = courses.filter((course) => course.dayIndex === dayIndex);
+      const report = state.dailyReports[program.id] || { clearDate: null, stages: {} };
+      const records = dayCourses.map((course) => report.stages?.[course.id] || null);
+      const recordedStages = records.filter(Boolean);
+      const totalAttempts = recordedStages.reduce((total, record) => total + record.attempts, 0);
+      const totalCorrect = recordedStages.reduce((total, record) => total + record.correct, 0);
+      const accuracy = totalAttempts ? Math.round((totalCorrect / totalAttempts) * 100) : null;
+      const completedBattles = dayCourses.filter((course) => state.completedCourses.includes(course.id)).length;
+      const finalCourse = dayCourses[dayCourses.length - 1];
+      const clearDate = report.clearDate || state.courseClearDates[finalCourse.id] || null;
+      const hasTestRecords = recordedStages.some((record) => record.testCleared);
+      const hasMissingRecords = recordedStages.length < dayCourses.length;
+
+      els.teacherReportTitle.textContent = `${program.day} 학습 완료`;
+      els.teacherReportMeta.textContent = `${clearDate || "완료 날짜 기록 없음"} · ${program.title}`;
+      els.teacherReportAccuracy.textContent = accuracy === null ? "통과" : `${accuracy}%`;
+      els.teacherReportAttempts.textContent = totalAttempts ? `${totalAttempts}문제` : "기록 없음";
+      els.teacherReportBattles.textContent = `${completedBattles}/${dayCourses.length}`;
+      els.teacherReportNote.textContent = hasTestRecords
+        ? "테스트 버튼으로 완료한 기록이 포함되어 있습니다. 실제 학습 결과와 구분해 주세요."
+        : hasMissingRecords
+          ? "이전 버전에서 완료한 스테이지는 세부 문제 기록 없이 통과 여부만 표시됩니다."
+          : "각 스테이지에서 최소 90% 정확도를 달성하고 포획 배틀을 완료한 기록입니다.";
+      els.teacherReportRows.innerHTML = `
+        <div class="teacher-report-row header">
+          <span>스테이지</span><span>문제</span><span>정확도</span><span>포획</span>
+        </div>
+        ${dayCourses.map((course, index) => {
+          const record = records[index];
+          return `
+            <div class="teacher-report-row">
+              <span>${index + 1}. ${course.label}${record?.testCleared ? " (테스트)" : ""}</span>
+              <span>${record ? record.attempts : "-"}</span>
+              <span>${record?.accuracy === null || record?.accuracy === undefined ? "통과" : `${record.accuracy}%`}</span>
+              <span>${record?.bossName || "완료"}</span>
+            </div>`;
+        }).join("")}`;
+      els.teacherReportFooter.textContent = `${program.day}의 트레이닝과 포획 배틀 ${completedBattles}개를 완료했습니다.`;
+      els.teacherReport.classList.add("active");
+      els.teacherReport.setAttribute("aria-hidden", "false");
+      els.teacherReportClose.focus();
+    }
+
+    function closeTeacherReport() {
+      els.teacherReport.classList.remove("active");
+      els.teacherReport.setAttribute("aria-hidden", "true");
+    }
+
+    function showCourseSelection() {
+      clearInterval(state.timerId);
+      if (state.starterKey) save();
+      showScreen("courses");
+      renderCourseSelect();
+    }
+
+    function testClearThrough(targetIndex) {
+      const safeTarget = Math.max(0, Math.min(courses.length - 1, Number(targetIndex) || 0));
+      clearInterval(state.timerId);
+      if (state.starterKey) save();
+      state.starterKey = state.nextPartnerKey || state.starterKey || firstPartnerKey;
+
+      const newlyCaptured = [];
+      const newlyCompletedDays = [];
+      for (let index = 0; index <= safeTarget; index += 1) {
+        const course = courses[index];
+        const firstCompletion = !state.completedCourses.includes(course.id);
+        const boss = bossForCourse(course);
+        if (firstCompletion) {
+          state.completedCourses.push(course.id);
+          state.score += 50;
+          state.exp += 30;
+          if (course.isDayFinal) newlyCompletedDays.push(course.dayIndex);
+        }
+        delete state.courseProgress[course.id];
+
+        const capturedPartner = partnerByKey(boss.partnerKey);
+        if (capturedPartner && !state.unlockedStarterKeys.includes(capturedPartner.key)) {
+          state.unlockedStarterKeys.push(capturedPartner.key);
+        }
+        if (!state.captured.some((pokemon) => pokemon.id === boss.id)) {
+          state.captured.push({
+            id: boss.id,
+            name: boss.name,
+            partnerKey: capturedPartner?.key || null
+          });
+          newlyCaptured.push(boss.name);
+        }
+        const existingReport = state.dailyReports[course.dayId]?.stages?.[course.id];
+        if (firstCompletion || !existingReport) recordStageReport(course, boss, true);
+      }
+
+      const highestCompletedDay = courses.reduce((highest, course) => (
+        state.completedCourses.includes(course.id) ? Math.max(highest, course.dayIndex) : highest
+      ), 0);
+      state.firstClearDate = state.completedCourses.includes("d1-final")
+        ? addDaysToDateKey(localDateKey(), -highestCompletedDay)
+        : null;
+      courses.forEach((course, index) => {
+        if (state.completedCourses.includes(course.id)) {
+          state.courseClearDates[course.id] = state.firstClearDate
+            ? addDaysToDateKey(state.firstClearDate, course.dayIndex)
+            : localDateKey();
+        }
+      });
+
+      const nextIndex = Math.min(safeTarget + 1, courses.length - 1);
+      state.currentCourseId = courses[nextIndex].id;
+      state.mode = "training";
+      state.streak = 0;
+      state.correctInStage = 0;
+      state.trainingAttempts = 0;
+      state.trainingCovered = [];
+      state.playerHp = 100;
+      state.enemyHp = 0;
+      state.question = null;
+      state.deadline = 0;
+      state.locked = false;
+      state.mistakeWeights = {};
+      els.captureScene.classList.remove("active");
+      els.captureScene.setAttribute("aria-hidden", "true");
+      save(false);
+      showScreen("courses");
+      renderCourseSelect();
+      openBlockingModal(
+        "테스트 클리어 완료",
+        `${courses[safeTarget].day} ${courses[safeTarget].label}까지 완료했습니다.${newlyCaptured.length ? ` 새 파트너 ${newlyCaptured.join(", ")}을(를) 포획했습니다.` : ""}`,
+        "확인",
+        () => {
+          renderCourseSelect();
+          if (newlyCompletedDays.length) {
+            showTeacherReport(newlyCompletedDays[newlyCompletedDays.length - 1]);
+          }
+        }
+      );
+    }
+
+    function startWith(key) {
+      state.starterKey = key;
+      state.nextPartnerKey = key;
+      state.currentCourseId = "d1-2";
+      state.score = 0;
+      state.exp = 0;
+      state.captured = [];
+      state.unlockedStarterKeys = [key];
+      state.completedCourses = [];
+      state.courseProgress = {};
+      state.dailyReports = {};
+      state.firstClearDate = null;
+      state.courseClearDates = {};
+      restoreCourseProgress("d1-2", true);
+      save();
+      showCourseSelection();
+      openBlockingModal(
+        "박사의 장기 임무",
+        `${currentStarter().names[0]}와 1일차 훈련을 시작하세요. 실전 배틀에서 이긴 포켓몬은 포획되어 다음 스테이지의 파트너 후보가 됩니다. 새 동료를 고르거나 지금 파트너와 계속 함께할 수 있습니다.`,
+        "훈련 확인",
+        renderCourseSelect
+      );
+    }
+
+    function selectCourse(courseId) {
+      const index = courseIndex(courseId);
+      if (index < 0 || (!isCourseUnlocked(index) && !state.completedCourses.includes(courseId))) return;
+      const replay = state.completedCourses.includes(courseId);
+      state.starterKey = state.nextPartnerKey;
+      restoreCourseProgress(courseId, replay);
+      showScreen("game");
+      updateAll();
+      save();
+      const hasProgress = state.mode === "boss" || state.trainingAttempts > 0;
+      openBlockingModal(
+        `${currentCourse().day} · ${currentCourse().label}`,
+        hasProgress
+          ? `저장된 지점부터 이어갑니다. 현재 ${state.trainingAttempts}문제, 정확도 ${trainingAccuracyPercent()}%입니다.`
+          : `${currentCourse().tables.join("·")}단의 모든 곱셈식을 확인한 뒤 실전 배틀에 도전합니다. 오늘의 목표는 최소 ${trainingAttemptGoal()}문제, 정확도 90%입니다.`,
+        hasProgress ? "이어하기" : "훈련 시작",
+        hasProgress ? resumeCurrentCourse : beginCourse
+      );
+    }
+
+    function resumeCurrentCourse() {
+      clearInterval(state.timerId);
+      state.locked = false;
+      updateAll();
+      if (state.mode === "boss") {
+        if (state.playerHp <= 0) showGameOver();
+        else if (state.enemyHp <= 0) captureBoss();
+        else {
+          els.message.textContent = `${bossForCourse().name}과의 배틀을 이어갑니다.`;
+          nextQuestion();
+        }
+      } else if (trainingPassed()) {
+        beginBoss();
+      } else {
+        els.message.textContent = `트레이닝 ${state.trainingAttempts}문제, 정확도 ${trainingAccuracyPercent()}%부터 이어갑니다.`;
+        nextQuestion();
+      }
+    }
+
+    function beginCourse() {
+      clearInterval(state.timerId);
+      state.mode = "training";
+      state.correctInStage = 0;
+      state.trainingAttempts = 0;
+      state.trainingCovered = [];
+      state.playerHp = 100;
+      state.enemyHp = 0;
+      state.streak = 0;
+      state.mistakeWeights = {};
+      state.locked = false;
+      updateAll();
+      els.message.textContent = `${trainingQuestionCount()}개 곱셈식을 모두 풀고, 최소 ${trainingAttemptGoal()}문제에서 정확도 90%를 달성하세요.`;
+      nextQuestion();
+      save();
+    }
+
+    function beginBoss() {
+      const course = currentCourse();
+      const boss = bossForCourse(course);
+      clearInterval(state.timerId);
+      state.mode = "boss";
+      state.playerHp = 100;
+      state.enemyHp = boss.hp;
+      state.streak = 0;
+      state.locked = false;
+      updateAll();
+      save();
+      els.problem.textContent = "준비!";
+      els.answerInput.value = "";
+      els.timerValue.textContent = `${gameBalance.bossTime.toFixed(1)}초`;
+      els.timerBar.style.width = "100%";
+      openBlockingModal(
+        course.legendary ? "전설의 기척!" : "트레이닝 통과!",
+        course.legendary
+          ? `${boss.name}이 모습을 드러냈습니다. 제한시간 안에 문제를 풀어 공격을 막고, 쓰러뜨린 뒤 몬스터볼로 포획하세요.`
+          : `${boss.name}과 실전 테스트를 치릅니다. 공격을 막고 반격해 승리하면 동료로 포획할 수 있습니다.`,
+        "포획 도전",
+        nextQuestion
+      );
+    }
+
+    function randomItem(items) {
+      return items[Math.floor(Math.random() * items.length)];
+    }
+
+    function questionKey(question) {
+      return `${question.a}x${question.b}`;
+    }
+
+    function trainingAccuracy() {
+      return state.trainingAttempts > 0
+        ? state.correctInStage / state.trainingAttempts
+        : 0;
+    }
+
+    function trainingAccuracyPercent() {
+      return Math.round(trainingAccuracy() * 100);
+    }
+
+    function stageQuestions(course = currentCourse()) {
+      return course.tables.flatMap((a) => (
+        Array.from({ length: 9 }, (_, index) => ({
+          a,
+          b: index + 1,
+          answer: a * (index + 1)
+        }))
+      ));
+    }
+
+    function trainingQuestionCount(course = currentCourse()) {
+      return stageQuestions(course).length;
+    }
+
+    function trainingAttemptGoal(course = currentCourse()) {
+      return Math.max(gameBalance.trainingMinimumAttempts, trainingQuestionCount(course));
+    }
+
+    function trainingPassed() {
+      return state.trainingAttempts >= trainingAttemptGoal()
+        && trainingAccuracy() >= gameBalance.trainingAccuracy
+        && state.trainingCovered.length === trainingQuestionCount();
+    }
+
+    function makeQuestion() {
+      const questions = stageQuestions();
+      if (state.mode === "training") {
+        const uncoveredQuestions = questions.filter((question) => (
+          !state.trainingCovered.includes(questionKey(question))
+        ));
+        if (uncoveredQuestions.length) return randomItem(uncoveredQuestions);
+      }
+      const candidates = questions.map((question) => ({
+        question,
+        weight: 1 + Math.min(4, state.mistakeWeights[questionKey(question)] || 0)
+      }));
+      const totalWeight = candidates.reduce((sum, item) => sum + item.weight, 0);
+      let roll = Math.random() * totalWeight;
+      for (const item of candidates) {
+        roll -= item.weight;
+        if (roll <= 0) return item.question;
+      }
+      return candidates[candidates.length - 1].question;
+    }
+
+    function questionTimeLimit() {
+      if (state.mode === "boss") return gameBalance.bossTime;
+      const goal = Math.max(1, trainingAttemptGoal() - 1);
+      const progress = Math.min(1, state.trainingAttempts / goal);
+      return gameBalance.time - (gameBalance.time - gameBalance.bossTime) * progress;
+    }
+
+    function enableKeypadOnlyInput() {
+      els.answerInput.readOnly = true;
+      els.answerInput.setAttribute("inputmode", "none");
+      els.answerInput.blur();
+    }
+
+    function focusAnswerInput() {
+      els.answerInput.blur();
+    }
+
+    function setAnswerControlsDisabled(disabled) {
+      els.answerInput.disabled = disabled;
+      els.submitBtn.disabled = disabled;
+      els.keypad.querySelectorAll("button").forEach((button) => {
+        button.disabled = disabled;
+      });
+    }
+
+    function nextQuestion() {
+      clearInterval(state.timerId);
+      state.question = makeQuestion();
+      const total = questionTimeLimit();
+      state.deadline = performance.now() + total * 1000;
+      els.problem.classList.remove("correction");
+      els.problem.textContent = `${state.question.a} × ${state.question.b}`;
+      els.answerInput.value = "";
+      setAnswerControlsDisabled(false);
+      focusAnswerInput();
+      tickTimer();
+      state.timerId = setInterval(tickTimer, 80);
+    }
+
+    function tickTimer() {
+      const total = questionTimeLimit();
+      const left = Math.max(0, (state.deadline - performance.now()) / 1000);
+      const pct = Math.max(0, Math.min(100, (left / total) * 100));
+      els.timerValue.textContent = `${left.toFixed(1)}초`;
+      els.timerBar.style.width = `${pct}%`;
+      if (pct < 32) {
+        els.timerBar.style.background = "linear-gradient(90deg, #eb5757, #f2c94c)";
+      } else {
+        els.timerBar.style.background = "linear-gradient(90deg, #6fcf97, #f2c94c)";
+      }
+      if (left <= 0 && !state.locked) {
+        handleAnswer(null, true);
+      }
+    }
+
+    function handleAnswer(value, timedOut = false) {
+      if (state.locked) return;
+      state.locked = true;
+      clearInterval(state.timerId);
+
+      const isCorrect = Number(value) === state.question.answer;
+      if (state.mode === "training") {
+        state.trainingAttempts += 1;
+        const key = questionKey(state.question);
+        if (!state.trainingCovered.includes(key)) {
+          state.trainingCovered.push(key);
+        }
+      }
+      if (isCorrect) {
+        onCorrect();
+      } else {
+        onWrong(timedOut);
+      }
+
+      setAnswerControlsDisabled(true);
+      updateAll();
+      save();
+      const feedbackDelay = isCorrect ? 700 : 5200;
+      if (!checkEndConditions(feedbackDelay)) {
+        const continueRound = () => {
+          state.locked = false;
+          nextQuestion();
+        };
+        state.timerId = setTimeout(continueRound, feedbackDelay);
+      }
+    }
+
+    function onCorrect() {
+      const key = questionKey(state.question);
+      state.streak += 1;
+      if (state.mode === "training") state.correctInStage += 1;
+      state.score += gameBalance.score + Math.min(state.streak, 5) * 2;
+      state.exp += gameBalance.exp + (state.mode === "boss" ? 6 : 0);
+      if (state.mistakeWeights[key]) {
+        state.mistakeWeights[key] = Math.max(0, state.mistakeWeights[key] - 0.2);
+        if (state.mistakeWeights[key] < 0.05) delete state.mistakeWeights[key];
+      }
+
+      if (state.mode === "boss") {
+        state.enemyHp = Math.max(0, state.enemyHp - gameBalance.damage - Math.min(state.streak * 2, 12));
+        animate(els.enemySprite, "hit");
+        els.message.textContent = `정답! ${bossForCourse().name}에게 반격했습니다.`;
+      } else {
+        animate(els.playerSprite, "training-success", 620);
+        const remaining = Math.max(0, trainingAttemptGoal() - state.trainingAttempts);
+        const uncovered = Math.max(0, trainingQuestionCount() - state.trainingCovered.length);
+        els.message.textContent = trainingPassed()
+          ? "트레이닝 통과! 실전 배틀을 준비하세요."
+          : uncovered > 0
+            ? `정답! 아직 ${uncovered}개 곱셈식을 더 확인해야 합니다. 정확도 ${trainingAccuracyPercent()}%`
+            : remaining > 0
+            ? `정답! 정확도 ${trainingAccuracyPercent()}% · 최소 ${remaining}문제 더 풀어야 합니다.`
+            : `정답! 현재 정확도 ${trainingAccuracyPercent()}% · 90%가 되면 통과합니다.`;
+      }
+
+      playTone("good");
+    }
+
+    function onWrong(timedOut) {
+      const key = questionKey(state.question);
+      const equation = `${state.question.a} × ${state.question.b} = ${state.question.answer}`;
+      state.streak = 0;
+      state.mistakeWeights[key] = Math.min(4, (state.mistakeWeights[key] || 0) + 0.75);
+      els.problem.textContent = equation;
+      els.problem.classList.add("correction");
+      if (state.mode === "boss") {
+        state.playerHp = Math.max(0, state.playerHp - gameBalance.penalty);
+        animate(els.playerSprite, "hit");
+        els.message.textContent = timedOut
+          ? `시간 초과! ${equation}을 5초 동안 외워보세요. 남은 HP ${state.playerHp}`
+          : `오답! ${equation}을 5초 동안 외워보세요. 남은 HP ${state.playerHp}`;
+        playTone("bad");
+      } else {
+        state.score = Math.max(0, state.score - 3);
+        animate(els.playerSprite, "training-fail", 540);
+        const answerMessage = timedOut ? "시간 초과!" : "오답!";
+        els.message.textContent = `${answerMessage} ${equation}을 5초 동안 외워보세요. 정확도 ${trainingAccuracyPercent()}%`;
+        playTone("hit");
+      }
+    }
+
+    function checkEndConditions(feedbackDelay = 700) {
+      if (state.mode === "training" && trainingPassed()) {
+        state.timerId = setTimeout(beginBoss, feedbackDelay);
+        return true;
+      }
+
+      if (state.mode === "boss" && state.enemyHp <= 0) {
+        state.timerId = setTimeout(() => {
+          if (currentCourse().capture) captureBoss();
+          else completeCourse();
+        }, feedbackDelay);
+        return true;
+      }
+
+      if (state.mode === "boss" && state.playerHp <= 0) {
+        state.timerId = setTimeout(showGameOver, feedbackDelay);
+        return true;
+      }
+
+      return false;
+    }
+
+    function showGameOver() {
+      clearInterval(state.timerId);
+      state.locked = true;
+      updateAll();
+      save();
+      openModal(
+        "게임 오버",
+        `${bossForCourse().name}의 공격으로 파트너의 HP가 0이 되었습니다. 같은 배틀에 바로 재도전하거나 트레이닝부터 다시 준비할 수 있습니다. 재도전 횟수 제한은 없습니다.`,
+        "배틀 재도전"
+      );
+      els.modal.dataset.dismissible = "false";
+      els.modalSecondary.hidden = false;
+      els.modalSecondary.textContent = "트레이닝 다시하기";
+      els.modalPrimary.onclick = () => {
+        closeModal();
+        beginBoss();
+      };
+      els.modalSecondary.onclick = () => {
+        closeModal();
+        beginCourse();
+      };
+    }
+
+    function captureBoss() {
+      const course = currentCourse();
+      const boss = bossForCourse(course);
+      clearInterval(state.timerId);
+      els.captureTarget.src = sprite(boss.id);
+      els.captureTarget.onerror = () => {
+        els.captureTarget.onerror = null;
+        els.captureTarget.src = sprite(boss.id, false);
+      };
+      els.captureTarget.alt = `포획할 ${boss.name}`;
+      els.captureText.textContent = `${boss.name}에게 몬스터볼을 던졌다!`;
+      els.captureScene.classList.remove("active");
+      void els.captureScene.offsetWidth;
+      els.captureScene.classList.add("active");
+      els.captureScene.setAttribute("aria-hidden", "false");
+      playTone("capture");
+
+      setTimeout(() => {
+        els.captureText.textContent = `잡았다! ${boss.name} 포획 성공!`;
+      }, 2650);
+
+      setTimeout(() => {
+        els.captureScene.classList.remove("active");
+        els.captureScene.setAttribute("aria-hidden", "true");
+        completeCourse();
+      }, 3800);
+    }
+
+    function completeCourse() {
+      const clearedCourse = currentCourse();
+      const clearedBoss = bossForCourse(clearedCourse);
+      const beforeEvolutionLevel = evolutionLevel();
+      const firstCompletion = !state.completedCourses.includes(clearedCourse.id);
+      let unlockedPartner = null;
+      if (firstCompletion) {
+        const clearedToday = localDateKey();
+        state.completedCourses.push(clearedCourse.id);
+        state.courseClearDates[clearedCourse.id] = clearedToday;
+        if (clearedCourse.dayIndex === 0 && clearedCourse.isDayFinal && !state.firstClearDate) {
+          state.firstClearDate = clearedToday;
+        }
+      }
+      const capturedPartner = partnerByKey(clearedBoss.partnerKey);
+      if (capturedPartner && !state.unlockedStarterKeys.includes(capturedPartner.key)) {
+        state.unlockedStarterKeys.push(capturedPartner.key);
+        unlockedPartner = capturedPartner;
+      }
+      if (!state.captured.some((pokemon) => pokemon.id === clearedBoss.id)) {
+        state.captured.push({
+          id: clearedBoss.id,
+          name: clearedBoss.name,
+          partnerKey: capturedPartner?.key || null
+        });
+      }
+      const existingReport = state.dailyReports[clearedCourse.dayId]?.stages?.[clearedCourse.id];
+      if (firstCompletion || existingReport?.testCleared) {
+        recordStageReport(clearedCourse, clearedBoss, false);
+      }
+      const evolved = evolutionLevel() > beforeEvolutionLevel;
+      state.score += 50;
+      state.exp += 30;
+      playTone("win");
+      burstConfetti();
+      state.locked = true;
+      updateAll();
+      save();
+      const clearedIndex = courseIndex(clearedCourse.id);
+      const nextCourse = courses[clearedIndex + 1];
+      const nextCourseUnlocked = nextCourse ? isCourseUnlocked(clearedIndex + 1) : false;
+      const nextCourseMessage = nextCourse
+        ? nextCourseUnlocked
+          ? `${nextCourse.day} ${nextCourse.label} 스테이지가 열렸습니다.`
+          : `${formatDateLabel(courseReleaseDate(clearedIndex + 1))}에 ${nextCourse.day} ${nextCourse.label} 스테이지가 열립니다.`
+        : "";
+      const finalVictory = clearedCourse.id === "d6-final" && state.completedCourses.length === courses.length;
+      const unlockMessage = unlockedPartner
+        ? ` ${unlockedPartner.names[0]}이(가) 파트너 후보로 합류했습니다. 다음 스테이지를 함께하거나 지금 파트너와 계속 이어갈 수 있습니다.`
+        : "";
+      const showCourseResult = () => {
+        showCourseSelection();
+        openBlockingModal(
+          finalVictory
+            ? "아르세우스 포획 성공!"
+            : clearedCourse.isDayFinal
+              ? `${clearedCourse.day} 훈련 완료!`
+              : `${clearedCourse.label} 스테이지 완료!`,
+          finalVictory
+            ? "여러 날의 훈련을 모두 마치고 2단부터 9단까지 최종 시험을 통과했습니다. 당신은 진정한 구구단 마스터입니다!"
+            : !firstCompletion
+              ? `${clearedCourse.label} 복습을 완료했습니다.${unlockMessage} 스테이지 목록에서 다른 훈련을 계속할 수 있습니다.`
+              : nextCourse
+              ? `${clearedBoss.name}을 동료로 포획했습니다.${unlockMessage} ${nextCourseMessage}`
+              : `${clearedBoss.name}을 다시 포획했습니다. 모든 날짜별 스테이지를 자유롭게 복습할 수 있습니다.`,
+          "스테이지 목록",
+          () => {
+            renderCourseSelect();
+            if (firstCompletion && clearedCourse.isDayFinal) {
+              showTeacherReport(clearedCourse.dayIndex);
+            }
+          }
+        );
+      };
+
+      if (evolved) showEvolution(showCourseResult);
+      else showCourseResult();
+    }
+
+    function showEvolution(afterClose) {
+      const starter = currentStarter();
+      const level = evolutionLevel();
+      playTone("evolve");
+      burstConfetti();
+      updatePokemonSprites();
+      openBlockingModal(
+        "진화!",
+        `파트너가 ${starter.names[level]}(으)로 진화했습니다.`,
+        "좋아!",
+        afterClose
+      );
+    }
+
+    function animate(el, className, duration = 240) {
+      el.classList.remove(className);
+      void el.offsetWidth;
+      el.classList.add(className);
+      setTimeout(() => el.classList.remove(className), duration);
+    }
+
+    function updateAll() {
+      updateStatus();
+      updatePokemonSprites();
+      updateCourse();
+    }
+
+    function updateStatus() {
+      const level = evolutionLevel();
+      const completedCount = state.completedCourses.length;
+      const next = evolutionCourseThresholds[level + 1];
+      const prev = evolutionCourseThresholds[level] || 0;
+      const span = next ? next - prev : 1;
+      const progress = next ? Math.min(100, ((completedCount - prev) / span) * 100) : 100;
+      els.xpText.textContent = `EXP ${state.exp}`;
+      els.evoText.textContent = next ? `진화까지 ${next - completedCount}스테이지` : "최종 진화 완료";
+      els.xpBar.style.width = `${progress}%`;
+      els.progressText.textContent = state.mode === "boss"
+        ? `${Math.max(0, state.enemyHp)} HP`
+        : state.trainingCovered.length < trainingQuestionCount()
+          ? `${state.trainingCovered.length}/${trainingQuestionCount()}식`
+          : `${trainingAccuracyPercent()}%`;
+    }
+
+    function updatePokemonSprites() {
+      const starter = currentStarter();
+      const level = evolutionLevel();
+      const id = starter.ids[level];
+      els.playerName.textContent = starter.names[level];
+      els.playerSprite.src = sprite(id);
+      els.playerSprite.onerror = () => { els.playerSprite.src = sprite(id, false); };
+      els.playerHp.style.width = `${state.playerHp}%`;
+      renderCapturedCompanions();
+    }
+
+    function renderCapturedCompanions() {
+      const signature = state.captured.map((pokemon) => pokemon.id).join(",");
+      if (els.capturedCompanions.dataset.signature === signature) return;
+      els.capturedCompanions.dataset.signature = signature;
+      els.capturedCompanions.innerHTML = "";
+
+      state.captured.forEach((pokemon, index) => {
+        const row = Math.floor(index / 6);
+        const column = index % 6;
+        const rowCount = Math.min(6, state.captured.length - row * 6);
+        const left = rowCount === 1 ? 46 : 7 + (column * 84) / (rowCount - 1);
+        const friend = document.createElement("img");
+        friend.className = "captured-friend";
+        friend.src = sprite(pokemon.id);
+        friend.alt = `포획한 ${pokemon.name}`;
+        friend.title = pokemon.name;
+        friend.style.setProperty("--friend-left", `${left}%`);
+        friend.style.setProperty("--friend-bottom", `${7 + row * 17}%`);
+        friend.style.setProperty("--friend-speed", `${5.2 + (index % 4) * 0.9}s`);
+        friend.style.setProperty("--friend-delay", `${-(index % 5) * 0.7}s`);
+        friend.onerror = () => {
+          friend.onerror = null;
+          friend.src = sprite(pokemon.id, false);
+        };
+        els.capturedCompanions.appendChild(friend);
+      });
+    }
+
+    function updateCourse() {
+      const course = currentCourse();
+      const boss = bossForCourse(course);
+      const tables = course.tables.map((n) => `${n}단`).join(", ");
+      els.gameScreen.dataset.mode = state.mode;
+      els.stageBrief.textContent = `${course.day} · ${course.label}`;
+      els.stageTitle.textContent = state.mode === "boss"
+        ? `${course.label} ${course.legendary ? "전설 포획전" : "실전 포획전"}`
+        : `${course.label} 훈련`;
+      els.stageDesc.textContent = state.mode === "boss"
+        ? `${boss.name}의 공격을 막고 반격하세요. 승리하면 동료로 포획할 수 있습니다. 출제 범위: ${tables}`
+        : `${tables}의 ${trainingQuestionCount()}개 곱셈식을 모두 풀고, 최소 ${trainingAttemptGoal()}문제에서 정확도 ${gameBalance.trainingAccuracy * 100}%를 달성하면 실전 배틀이 열립니다.`;
+      els.modePill.textContent = state.mode === "boss"
+        ? "포획전"
+        : "트레이닝";
+      els.submitBtn.textContent = state.mode === "boss" ? "반격" : "확인";
+
+      if (state.mode === "boss") {
+        els.enemyName.textContent = boss.name;
+        els.enemySprite.src = sprite(boss.id);
+        els.enemySprite.onerror = () => { els.enemySprite.src = sprite(boss.id, false); };
+        els.enemyHp.style.width = `${Math.max(0, (state.enemyHp / boss.hp) * 100)}%`;
+      } else {
+        els.enemyName.textContent = "훈련 상대";
+        els.enemySprite.src = sprite(132);
+        els.enemySprite.onerror = () => { els.enemySprite.src = sprite(132, false); };
+        els.enemyHp.style.width = "100%";
+      }
+    }
+
+    function openModal(title, text, primaryText = "확인") {
+      els.modalTitle.textContent = title;
+      els.modalText.textContent = text;
+      els.modalPrimary.textContent = primaryText;
+      els.modalSecondary.textContent = "닫기";
+      els.modalSecondary.hidden = false;
+      els.modal.dataset.dismissible = "true";
+      els.modal.classList.add("active");
+      els.modalPrimary.onclick = closeModal;
+      els.modalSecondary.onclick = closeModal;
+      els.modalPrimary.focus();
+    }
+
+    function openBlockingModal(title, text, primaryText, onContinue) {
+      clearInterval(state.timerId);
+      openModal(title, text, primaryText);
+      els.modal.dataset.dismissible = "false";
+      els.modalSecondary.hidden = true;
+      els.modalPrimary.onclick = () => {
+        closeModal();
+        if (onContinue) onContinue();
+      };
+    }
+
+    function closeModal() {
+      els.modal.classList.remove("active");
+      els.modal.dataset.dismissible = "true";
+      els.modalSecondary.hidden = false;
+      focusAnswerInput();
+    }
+
+    function burstConfetti() {
+      const colors = ["#2f80ed", "#f2c94c", "#27ae60", "#eb5757", "#9b51e0"];
+      els.confetti.innerHTML = "";
+      for (let i = 0; i < 42; i += 1) {
+        const piece = document.createElement("i");
+        piece.style.left = `${Math.random() * 100}%`;
+        piece.style.background = randomItem(colors);
+        piece.style.animationDelay = `${Math.random() * 0.22}s`;
+        piece.style.transform = `rotate(${Math.random() * 180}deg)`;
+        els.confetti.appendChild(piece);
+      }
+      setTimeout(() => { els.confetti.innerHTML = ""; }, 1500);
+    }
+
+    els.starterGrid.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-starter]");
+      if (!button) return;
+      startWith(button.dataset.starter);
+    });
+
+    els.resumeBtn.addEventListener("click", () => {
+      if (!load()) return;
+      showCourseSelection();
+    });
+
+    els.courseGrid.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-course]");
+      if (!button || button.disabled) return;
+      selectCourse(button.dataset.course);
+    });
+
+    els.courseGrid.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-report-day]");
+      if (!button) return;
+      showTeacherReport(Number(button.dataset.reportDay));
+    });
+
+    els.teacherReportClose.addEventListener("click", closeTeacherReport);
+    els.teacherReport.addEventListener("click", (event) => {
+      if (event.target === els.teacherReport) closeTeacherReport();
+    });
+
+    els.testBtn.addEventListener("click", () => {
+      const opening = els.testPanel.hidden;
+      if (opening && els.gameScreen.classList.contains("active")) {
+        state.locked = true;
+        clearInterval(state.timerId);
+        save();
+        showScreen("courses");
+        renderCourseSelect();
+      }
+      els.testPanel.hidden = !opening;
+      els.testBtn.setAttribute("aria-expanded", String(opening));
+    });
+
+    els.testStageButtons.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-test-stage]");
+      if (!button) return;
+      testClearThrough(button.dataset.testStage);
+    });
+
+    els.partnerOptions.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-partner]");
+      if (!button || button.disabled || !isStarterUnlocked(button.dataset.partner)) return;
+      state.nextPartnerKey = button.dataset.partner;
+      save(false);
+      renderCourseSelect();
+    });
+
+    els.courseBtn.addEventListener("click", () => {
+      state.locked = true;
+      clearInterval(state.timerId);
+      save();
+      showCourseSelection();
+    });
+
+    els.answerForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      if (!els.answerInput.value.trim()) return;
+      handleAnswer(els.answerInput.value);
+    });
+
+    els.keypad.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-key]");
+      if (!button || button.disabled || state.locked) return;
+      const key = button.dataset.key;
+
+      if (/^\d$/.test(key)) {
+        if (els.answerInput.value.length < 2) {
+          els.answerInput.value += key;
+        }
+      } else if (key === "delete") {
+        els.answerInput.value = els.answerInput.value.slice(0, -1);
+      } else if (key === "submit") {
+        els.answerForm.requestSubmit();
+      }
+    });
+
+    els.resetBtn.addEventListener("click", () => {
+      clearInterval(state.timerId);
+      const wasPlaying = els.gameScreen.classList.contains("active");
+      state.locked = true;
+      openModal("처음부터 시작", "저장된 진행도를 지우고 새 스타터를 고릅니다.", "초기화");
+      els.modalPrimary.onclick = () => {
+        closeModal();
+        resetGame();
+      };
+      els.modalSecondary.textContent = "계속하기";
+      els.modalSecondary.onclick = () => {
+        closeModal();
+        if (wasPlaying) {
+          state.locked = false;
+          nextQuestion();
+        }
+      };
+    });
+
+    els.soundBtn.addEventListener("click", () => {
+      state.muted = !state.muted;
+      els.soundBtn.style.background = state.muted ? "#7b8798" : "#172033";
+      save();
+    });
+
+    els.modal.addEventListener("click", (event) => {
+      if (event.target === els.modal && els.modal.dataset.dismissible !== "false" && !els.modalSecondary.hidden) {
+        els.modalSecondary.click();
+      }
+    });
+
+    enableKeypadOnlyInput();
+
+    renderStart();
+    if (load()) {
+      els.soundBtn.style.background = state.muted ? "#7b8798" : "#172033";
+      showCourseSelection();
+    } else {
+      localStorage.removeItem(storageKey);
+      els.resumeBtn.hidden = true;
+    }
+
+  </script>
+</body>
+</html>
