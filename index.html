@@ -2179,6 +2179,8 @@
       correctInStage: 0,
       trainingAttempts: 0,
       trainingCovered: [],
+      bossQuestionOrder: [],
+      bossQuestionIndex: 0,
       playerHp: 100,
       enemyHp: 0,
       question: null,
@@ -2413,6 +2415,8 @@
         correctInStage: state.correctInStage,
         trainingAttempts: state.trainingAttempts,
         trainingCovered: [...state.trainingCovered],
+        bossQuestionOrder: [...state.bossQuestionOrder],
+        bossQuestionIndex: state.bossQuestionIndex,
         playerHp: state.playerHp,
         enemyHp: state.enemyHp,
         mistakeWeights: { ...state.mistakeWeights }
@@ -2434,6 +2438,17 @@
       state.trainingCovered = Array.isArray(progress.trainingCovered)
         ? [...new Set(progress.trainingCovered.filter((key) => validKeys.has(key)))]
         : [];
+      const savedBossOrder = Array.isArray(progress.bossQuestionOrder)
+        ? progress.bossQuestionOrder.filter((key) => validKeys.has(key))
+        : [];
+      state.bossQuestionOrder = state.mode === "boss"
+        ? savedBossOrder.length === validKeys.size && new Set(savedBossOrder).size === validKeys.size
+          ? savedBossOrder
+          : shuffledQuestions(course).map(questionKey)
+        : [];
+      state.bossQuestionIndex = state.mode === "boss"
+        ? Math.min(state.bossQuestionOrder.length, Math.max(0, Number(progress.bossQuestionIndex) || 0))
+        : 0;
       state.playerHp = Math.max(0, Math.min(100, Number.isFinite(Number(progress.playerHp)) ? Number(progress.playerHp) : 100));
       state.enemyHp = Math.max(0, Number(progress.enemyHp) || 0);
       state.mistakeWeights = progress.mistakeWeights && typeof progress.mistakeWeights === "object"
@@ -2608,6 +2623,8 @@
         correctInStage: 0,
         trainingAttempts: 0,
         trainingCovered: [],
+        bossQuestionOrder: [],
+        bossQuestionIndex: 0,
         playerHp: 100,
         enemyHp: 0,
         question: null,
@@ -2861,6 +2878,8 @@
       state.correctInStage = 0;
       state.trainingAttempts = 0;
       state.trainingCovered = [];
+      state.bossQuestionOrder = [];
+      state.bossQuestionIndex = 0;
       state.playerHp = 100;
       state.enemyHp = 0;
       state.question = null;
@@ -2972,6 +2991,8 @@
       state.mode = "boss";
       state.playerHp = 100;
       state.enemyHp = boss.hp;
+      state.bossQuestionOrder = shuffledQuestions(course).map(questionKey);
+      state.bossQuestionIndex = 0;
       state.streak = 0;
       state.locked = false;
       updateAll();
@@ -3018,6 +3039,15 @@
       ));
     }
 
+    function shuffledQuestions(course = currentCourse()) {
+      const questions = stageQuestions(course);
+      for (let index = questions.length - 1; index > 0; index -= 1) {
+        const randomIndex = Math.floor(Math.random() * (index + 1));
+        [questions[index], questions[randomIndex]] = [questions[randomIndex], questions[index]];
+      }
+      return questions;
+    }
+
     function trainingQuestionCount(course = currentCourse()) {
       return stageQuestions(course).length;
     }
@@ -3034,6 +3064,10 @@
 
     function makeQuestion() {
       const questions = stageQuestions();
+      if (state.mode === "boss") {
+        const nextQuestionKey = state.bossQuestionOrder[state.bossQuestionIndex];
+        return questions.find((question) => questionKey(question) === nextQuestionKey) || questions[0];
+      }
       if (state.mode === "training") {
         const uncoveredQuestions = questions.filter((question) => (
           !state.trainingCovered.includes(questionKey(question))
@@ -3126,6 +3160,14 @@
       } else {
         onWrong(timedOut);
       }
+      if (state.mode === "boss") {
+        state.bossQuestionIndex += 1;
+        const totalQuestions = state.bossQuestionOrder.length;
+        const remainingQuestions = totalQuestions - state.bossQuestionIndex;
+        state.enemyHp = remainingQuestions <= 0
+          ? 0
+          : Math.max(1, Math.ceil(currentCourse().hp * remainingQuestions / totalQuestions));
+      }
 
       setAnswerControlsDisabled(true);
       updateAll();
@@ -3152,7 +3194,6 @@
       }
 
       if (state.mode === "boss") {
-        state.enemyHp = Math.max(0, state.enemyHp - gameBalance.damage - Math.min(state.streak * 2, 12));
         animate(els.enemySprite, "hit");
         els.message.textContent = `정답! ${bossForCourse().name}에게 반격했습니다.`;
       } else {
@@ -3200,16 +3241,16 @@
         return true;
       }
 
-      if (state.mode === "boss" && state.enemyHp <= 0) {
+      if (state.mode === "boss" && state.playerHp <= 0) {
+        state.timerId = setTimeout(showGameOver, feedbackDelay);
+        return true;
+      }
+
+      if (state.mode === "boss" && state.bossQuestionIndex >= state.bossQuestionOrder.length) {
         state.timerId = setTimeout(() => {
           if (currentCourse().capture) captureBoss();
           else completeCourse();
         }, feedbackDelay);
-        return true;
-      }
-
-      if (state.mode === "boss" && state.playerHp <= 0) {
-        state.timerId = setTimeout(showGameOver, feedbackDelay);
         return true;
       }
 
@@ -3384,7 +3425,7 @@
       els.evoText.textContent = next ? `진화까지 ${next - completedCount}스테이지` : "최종 진화 완료";
       els.xpBar.style.width = `${progress}%`;
       els.progressText.textContent = state.mode === "boss"
-        ? `${Math.max(0, state.enemyHp)} HP`
+        ? `${state.bossQuestionIndex}/${state.bossQuestionOrder.length}식`
         : state.trainingCovered.length < trainingQuestionCount()
           ? `${state.trainingCovered.length}/${trainingQuestionCount()}식`
           : `${trainingAccuracyPercent()}%`;
